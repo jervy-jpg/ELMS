@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title></title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 2. Load YOUR configuration file -->
+    <script src="supabaseClient.js"></script>
+    <script src="login.js"></script>
+    <link rel="stylesheet" href="login.css">
+
+    </head>
+
+    <body>
+        <img src="logo.jpg" alt="School logo" class="background-logo">
+        
+
+        <div class="login-container">
+            
+            <div class="login-header">
+                <img src="logo2.png" alt="School Logo" class="header-logo">
+                <h1> Employee Leave Management System</h1>
+            </div>
+            <form>
+
+                <label> Email </label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+                
+                <div class="forgot">
+                    <a href="#">Forgot Password</a>
+                </div>
+
+                <div class="buttons-container">
+                    <button type="submit" class="btn-login">Log in </button>
+                <button type="button" onclick="window.location.href='signup.html'" class="btn-signup">Sign Up</button>
+
+               
+                </div>
+                
+            </form>
+        </div>
+       
+    </body>
+    
+</html>

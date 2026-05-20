@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 2. Load YOUR configuration file -->
+    <script src="supabaseClient.js"></script>
+    <script type="module" src="dashboard.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELMS - Dashboard</title>
+    <link rel="stylesheet" href="dashboard-style.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="logo2.png" alt="School Logo" class="sidebar-logo">
+                <h1>ELMS</h1>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#dashboard" id="dashboard-link" class="nav-link active"> Dashboard</a>
+                <a href="#file-leave" id="file-leave-link" class="nav-link"> File Leave</a>
+                <a href="#leave-history" id="leave-history-link" class="nav-link"> Leave History</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info-sidebar">
+                    <div class="avatar-wrapper">
+                        <img id="user" src="gojo.jpeg" alt="User Avatar" class="user-avatar">
+                        <label for="avatarinput" class="change-avatar-btn"></label>
+                        <input type="file" id="avatarinput" accept="image/*" style="display: none;">
+
+                    </div>
+                    <div>
+                        <h4 id="user-name-sidebar">
+                        </h4>
+                        <p>Employee</p>
+                    </div>
+
+                </div>
+                <div class="logout-btn" id="logout-button"> Logout</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="top-bar">
+                <h1 id="page-title">Dashboard</h1>
+                <div class="welcome-text">Welcome back, <strong id="welcome-user-name"></strong> 👋</div>
+            </header>
+
+            <!-- DASHBOARD SECTION -->
+            <div id="dashboard-content" class="content-section active">
+                <div class="dashboard-content">
+                    <h2 class="dashboard-welcome">Good Day,<span id="greeting-name"></span> 👋</h2>
+
+                    <div class="stats-container">
+                        <div class="stat-card upcoming-card">
+                            <p>Upcoming Leave</p>
+                            <h2 id="upcoming-leave-date"></h2>
+                            <small id="upcoming-leave-range"></small>
+                        </div>
+
+                        <div class="stat-card pending-card">
+                            <p>Pending Requests</p>
+                            <h2 id="pending-request-count"></h2>
+                        </div>
+                        <div class="stat-card approved-card">
+                            <p>Approved Leaves</p>
+                            <h2 id="approved-leaves-count"></h2>
+                        </div>
+
+                        <div class="stat-card total-card">
+                            <p>Total leave</p>
+                            <h2 id="total-used-days"></h2>
+                            <span>days</span>
+                        </div>
+                    </div>
+
+                    <!-- 🟢 TABLE WITH GRID LINES -->
+                    <div class="history-preview">
+                        <div class="section-header">
+                            <h3>Recent Leave Requests</h3>
+                            <a href="#history" id="view-all-recent" class="view-all">View All</a>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table class="leave-table grid-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date Filed</th>
+                                        <th>Leave Type</th>
+                                        <th>Days</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="Recent-request-table-body"></tbody>
+
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🟢 FILE LEAVE SECTION -->
+            <div id="file-leave-content" class="content-section">
+                <div class="leave-form-container">
+                    <h2 class="form-title">File New Leave Request</h2>
+
+                    <form id="leave-request-form" class="leave-form">
+
+                        <!-- Leave Type -->
+                        <div class="form-group">
+                            <label for="leave_type_form">Leave Type</label>
+                            <select id="leave_type_form" name="leave_type_form" required >
+                                <option value="">Select Leave Type</option>
+                                <option value="VL">Vacation Leave (Full Day)</option>
+                                <option value="VL1">Vacation Leave (Morning)</option>
+                                <option value="VL2">Vacation Leave (Afternoon)</option>
+                                <option value="SL">Sick Leave (Full Day)</option>
+                                <option value="SL1">Sick Leave (Morning)</option>
+                                <option value="SL2">Sick Leave (Afternoon)</option>
+                                <option value="ML">Maternity Leave</option>
+                                <option value="VL-D">Vacation Leave (Filed to DO)</option>
+                                <option value="SL-D">Sick Leave (Filed to DO)</option>
+                            </select>
+                        </div>
+
+                        <!-- Start + End Date SIDE BY SIDE -->
+                        <div class="form-row two-columns">
+
+                            <div class="form-group">
+                                <label for="start_date">Start Date</label>
+                                <input type="date" id="start_date" name="start_date" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="end_date">End Date</label>
+                                <input type="date" id="end_date" name="end_date" required>
+                            </div>
+
+                        </div>
+
+                        <!-- Reason FULL WIDTH -->
+                        <div class="form-group">
+                            <label for="reason_brief">Reason</label>
+                            <input type="text" id="reason_brief" name="reason_brief" placeholder="Brief reason..."
+                                required>
+                        </div>
+
+                        <button type="submit" class="submit-btn">Submit Request</button>
+
+                    </form>
+                </div>
+            </div>
+
+            <!-- 🟢 LEAVE HISTORY SECTION -->
+            <div id="leave-history-content" class="content-section">
+
+                <div class="history-preview">
+                    <h2 class="section-title">Leave History</h2>
+                    <div class="table-wrapper">
+                        <table class="leave-table grid-table">
+                            <thead>
+                                <tr>
+                                    <th>Date Filed</th>
+                                    <th>Leave Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Days</th>
+                                    <th>Status</th>
+                                    <th>Name</th>
+
+                                </tr>
+                            </thead>
+                            <tbody id="leave-history-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+        <!-- JAVASCRIPT -->
+
+
+</body>
+
+</html>

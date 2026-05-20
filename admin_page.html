@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Leave Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <link rel="stylesheet" href="admin_page.css">
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .status-pending { @apply bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-sm; }
+            .status-approved { @apply bg-green-100 text-green-800 px-2 py-0.5 rounded text-sm; }
+            .status-declined { @apply bg-red-100 text-red-800 px-2 py-0.5 rounded text-sm; }
+        }
+    </style>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
+
+
+<body class="bg-gray-50 flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-800 text-white flex flex-col">
+
+        <div class="p-4 border-b border-gray-700">
+            <h2 class="text-xl font-bold">Admin Panel</h2>
+
+            <p id="admin-name-sidebar" class="text-sm text-gray-300 mt-1">Admin User</p>
+
+        </div>
+
+        <div id="notif-panel" class="hidden absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg p-2 z-50">
+            <div class="text-sm font-bold p-2 border-b">Notifications</div>
+            <div id="notif-list"></div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-4 sidebar-nav">
+            <ul class="space-y-2">
+                <li><a href="#admin-dashboard" class="nav-link flex items-center px-3 py-2 rounded bg-gray-700"><i
+                            class="fa fa-tachometer mr-2"></i> Dashboard</a></li>
+                <li><a href="#leave-requests" class="nav-link flex items-center px-3 py-2 rounded hover:bg-gray-700"><i
+                            class="fa fa-file-text mr-2"></i> Leave Requests</a></li>
+                <li><a href="#employee-summary"
+                        class="nav-link flex items-center px-3 py-2 rounded hover:bg-gray-700"><i
+                            class="fa fa-users mr-2"></i> Employee Summary</a></li>
+                <li><a href="#leave-calendar" class="nav-link flex items-center px-3 py-2 rounded hover:bg-gray-700"><i
+                            class="fa fa-calendar mr-2"></i> Leave Calendar</a></li>
+                <li><a href="#reports" class="nav-link flex items-center px-3 py-2 rounded hover:bg-gray-700"><i
+                            class="fa fa-print mr-2"></i> Reports</a></li>
+                <li><a href="#employee-management"
+                        class="nav-link flex items-center px-3 py-2 rounded hover:bg-gray-700">
+                        <i class="fa fa-users mr-2"></i></i>Employee Management</a></li>
+            </ul>
+        </nav>
+        <div class="p-4 border-t border-gray-700">
+            <button id="admin-logout"
+                class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded flex items-center justify-center">
+                <i class="fa fa-sign-out mr-2"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+        <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
+            <h1 id="page-title" class="text-xl font-semibold text-gray-800">Admin Dashboard</h1>
+        </header>
+
+        <div class="p-6">
+
+            <!-- 1. ADMIN DASHBOARD -->
+            <section id="admin-dashboard-content" class="content-section active">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border">
+                        <h3 class="text-gray-500 text-sm font-medium">Total Requests</h3>
+                        <p id="admin-total-requests" class="text-3xl font-bold text-gray-800 mt-2">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border">
+                        <h3 class="text-gray-500 text-sm font-medium">Pending</h3>
+                        <p id="admin-pending-count" class="text-3xl font-bold text-yellow-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border">
+                        <h3 class="text-gray-500 text-sm font-medium">Approved</h3>
+                        <p id="admin-approved-count" class="text-3xl font-bold text-green-600 mt-2">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border">
+                        <h3 class="text-gray-500 text-sm font-medium">Declined</h3>
+                        <p id="admin-declined-count" class="text-3xl font-bold text-red-600 mt-2">0</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 class="text-lg font-semibold mb-4">Recent Leave Requests</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b text-left text-gray-600">
+                                    <th class="pb-3">Date Filed</th>
+                                    <th class="pb-3">Employee Name</th>
+                                    <th class="pb-3">Leave Type</th>
+                                    <th class="pb-3">Duration</th>
+                                    <th class="pb-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-recent-requests-body">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- 2. LEAVE REQUESTS (Manage/Action) -->
+            <section id="leave-requests-content" class="content-section hidden">
+
+                <!-- FILTER SECTION -->
+                <div class="admin-filters"></div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+
+                        <input type="text" id="search-leave-employee" class="border px-3 py-2 rounded text-sm"
+                            placeholder="Search employee">
+
+                        <input type="date" id="filter-start-date" class="border px-3 py-2 rounded text-sm">
+
+                        <input type="date" id="filter-end-date" class="border px-3 py-2 rounded text-sm">
+
+                        <button id="clear-filters" class="bg-gray-200 hover:bg-gray-300 rounded px-3 py-2 text-sm">
+                            Clear
+                        </button>
+
+                    </div>
+                </div>
+
+
+
+
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                        <i class="fa fa-file-text text-blue-500"></i>
+                        All Leave Requests
+                    </h3>
+                    <div class="overflow-x-auto rounded-lg">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-gray-500 text-xs uppercase tracking-wider">
+                                    <th class="pb-3 px-3">Filed</th>
+                                    <th class="pb-3 px-3">Employee</th>
+                                    <th class="pb-3 px-3">Type</th>
+                                    <th class="pb-3 px-3">Start</th>
+                                    <th class="pb-3 px-3">End</th>
+                                    <th class="pb-3 px-3">Reason</th>
+                                    <th class="pb-3 px-3">Status</th>
+                                    <th class="pb-3 px-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-leave-requests-body">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+            </section>
+        </div>
+
+        <!-- Modal for Decline Reason -->
+        <div id="decline-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold mb-3">Decline Leave Request</h3>
+                <textarea id="decline-reason" class="w-full border rounded p-2 mb-4"
+                    placeholder="Enter reason for declining..." rows="3"></textarea>
+                <div class="flex justify-end gap-2">
+                    <button id="cancel-decline" class="px-4 py-2 border rounded">Cancel</button>
+                    <button id="confirm-decline" class="px-4 py-2 bg-red-600 text-white rounded">Decline</button>
+                </div>
+            </div>
+        </div>
+        </section>
+
+        <!-- 3. EMPLOYEE LEAVE SUMMARY -->
+        <section id="employee-summary-content" class="content-section hidden">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <h3 class="text-lg font-semibold">Employee Leave Summary</h3>
+                    <div class="flex gap-3 flex-wrap">
+                        <input type="text" id="search-summary-employee" placeholder="Search employee..."
+                            class="border rounded px-3 py-1.5 text-sm">
+                        <select id="filter-month" class="border rounded px-3 py-1.5 text-sm">
+                            <option value="">All Months</option>
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <select id="filter-year" class="border rounded px-3 py-1.5 text-sm">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b text-left text-gray-600">
+                                <th class="pb-3">Employee Name</th>
+                                <th class="pb-3">Department</th>
+                                <th class="pb-3">Approved Leaves</th>
+                                <th class="pb-3">Total Days Used</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employee-summary-body">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. LEAVE CALENDAR -->
+        <section id="leave-calendar-content" class="content-section hidden">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold" id="calendar-month-year">June 2026</h3>
+                    <div class="flex gap-2">
+                        <button id="prev-month" class="px-3 py-1 border rounded">&lt;</button>
+                        <button id="next-month" class="px-3 py-1 border rounded">&gt;</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-2 text-center font-semibold text-gray-600 mb-2">
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-2">
+                    <!-- Calendar days loaded via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. EMPLOYEE MANAGEMENT -->
+        <section id="employee-management-content" class="content-section hidden">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+
+                <!-- HEADER -->
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold">Employee Management</h3>
+
+                    <!-- Optional future actions (search/filter buttons can go here) -->
+                    <div class="flex gap-2">
+                        <input type="text" id="employee-search" placeholder="Search employee..."
+                            class="px-3 py-1 border rounded text-sm" />
+                    </div>
+                </div>
+
+                <!-- TABLE -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="px-3 py-2 text-left">Employee Name</th>
+                                <th class="px-3 py-2 text-left">Department</th>
+                                <th class="px-3 py-2 text-left">Status</th>
+                                <th class="px-3 py-2 text-right">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="employee-management-body">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 5. REPORTS -->
+        <section id="reports-content" class="content-section hidden">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h3 class="text-lg font-semibold mb-4">Generate Report</h3>
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <select id="report-month" class="border rounded px-3 py-1.5">
+                        <option value="05">May</option>
+                        <option value="06" selected>June</option>
+                    </select>
+                    <select id="report-year" class="border rounded px-3 py-1.5">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+
+                    <button id="generate-report" class="bg-blue-600 text-white px-4 py-2 rounded">Load Data</button>
+
+                    <button id="export-pdf" class="bg-red-600 text-white px-4 py-2 rounded hidden">Export
+                        PDF
+                    </button>
+
+                    <button id="export-excel" class="bg-green-600 text-white px-4 py-2 rounded hidden">
+                        Export Excel
+                    </button>
+
+
+                </div>
+
+                <div id="report-content" class="border rounded p-4 hidden">
+                    <h2 class="text-center text-xl font-bold mb-2">LEAVE MANAGEMENT REPORT</h2>
+                    <h3 class="text-center text-gray-600 mb-6">For the Month of <span id="report-month-text"></span>
+                        <span id="report-year-text"></span>
+                    </h3>
+
+                    <table class="w-full text-sm mb-6 border">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2 text-left">Employee Name</th>
+                                <th class="p-2 text-left">Leave Dates</th>
+                                <th class="p-2 text-center">Type</th>
+                                <th class="p-2 text-center">Days</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-table-body">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-50 p-3 border rounded">
+                            <strong>Total Employees on Leave:</strong> <span id="report-total-employees">0</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 border rounded">
+                            <strong>Total Approved Leaves:</strong> <span id="report-total-leaves">0</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 border rounded">
+                            <strong>Total Leave Days Combined:</strong> <span id="report-total-days">0</span>
+                        </div>
+
+                        <div class="bg-gray-50 p-3 border rounded">
+                            <strong>Filed for DO:</strong>
+                            <span id="report-total-filed-do">0</span>
+                        </div>
+
+                        <div class="bg-gray-50 p-3 border rounded">
+                            <strong>Not Filed for DO:</strong>
+                            <span id="report-total-not-filed-do">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        </div>
+    </main>
+    <!-- Global Modal -->
+    <<div id="global-modal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center">
+
+        <div id="modal-box" class="bg-white w-full max-w-md mx-4 rounded-xl shadow-2xl p-6
+                transform transition-all duration-200 scale-95 opacity-0">
+
+            <h2 id="modal-title" class="text-lg font-semibold text-gray-800 mb-3"></h2>
+
+            <p id="modal-message" class="text-sm text-gray-600 mb-6"></p>
+
+            <div id="modal-actions" class="flex justify-end gap-3"></div>
+
+        </div>
+        </div>
+
+        <script src="admin_page.js"></script>
+
+
+</body>
+
+</html>
