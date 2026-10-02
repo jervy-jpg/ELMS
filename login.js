@@ -72,6 +72,32 @@ async function handleLogin(e) {
     }
 }
 
+async function handleForgotPassword() {
+    const email = prompt("Enter your email address:");
+
+    if (!email) {
+        return;
+    }
+
+    try {
+        const { error } = await window.supabaseClient.auth.resetPasswordForEmail(
+            email.trim(),
+            {
+                redirectTo: "https://elms-beta.vercel.app/reset_password.html"
+            }
+        );
+
+        if (error) {
+            throw error;
+        }
+
+        alert("Password reset instructions have been sent to your email.");
+    } catch (error) {
+        console.error("❌ Password reset error:", error);
+        alert("Could not send password reset email: " + error.message);
+    }
+}
+
 
 // Initialize when the page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -82,5 +108,16 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("✅ Login form handler attached successfully");
     } else {
         console.error("❌ Login form not found in the HTML");
+    }
+
+    const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+
+    if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        handleForgotPassword();
+    });
+
+    console.log("✅ Forgot Password handler attached successfully");
     }
 })
