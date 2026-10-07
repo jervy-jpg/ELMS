@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             case "ML": return "ML";
             case "VL-D": return "VL-D";
             case "SL-D": return "SL-D";
+            case "WL": return "WL";
             default: return "";
         }
     }
@@ -199,7 +200,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             SL2: 0,
             ML: 0,
             VL_D: 0,
-            SL_D: 0
+            SL_D: 0,
+            WL: 0
+
         };
     }
 
@@ -266,10 +269,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             "Sick Leave Days",
             "Maternity/Paternity",
             "Vacation Leave (Division Office)",
-            "Sick Leave (Division Office)"
+            "Sick Leave (Division Office)",
+            "Wellness leave"
         );
 
-        dateRow.push("", "", "", "", "", "");
+        dateRow.push("", "", "", "", "", "", "");
 
         sheetData.push(dayNameRow);
         sheetData.push(dateRow);
@@ -425,7 +429,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             { wch: 12 },
             { wch: 15 },
             { wch: 20 },
-            { wch: 20 }
+            { wch: 20 },
+            { wch: 15 }
         ];
 
         // ======================================
@@ -434,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         worksheet["!merges"] = [
             {
                 s: { r: 0, c: 0 },
-                e: { r: 0, c: totalDays + 6 }
+                e: { r: 0, c: totalDays + 7 }
             }
         ];
 
@@ -536,6 +541,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Sick Leave filed to Division Office
                 if (C === totalDays + 6) {
                     worksheet[cellAddress].s.fill = { fgColor: { rgb: purple } };
+                }
+                // Wellness Leave
+                if (C === totalDays + 7) {
+                    worksheet[cellAddress].s.fill = {
+                        fgColor: { rgb: "FFD966" }
+                    };
                 }
 
                 // Employee names column
@@ -1729,39 +1740,39 @@ async function exportAsPDF() {
             yPos = 20;
         }
         const reportRange = getReportDateRange(
-    row.start_date,
-    row.end_date,
-    document.getElementById('report-month').value,
-    document.getElementById('report-year').value
-);
+            row.start_date,
+            row.end_date,
+            document.getElementById('report-month').value,
+            document.getElementById('report-year').value
+        );
 
-if (!reportRange) return;
+        if (!reportRange) return;
 
-doc.text(
-    `${row.profiles?.full_name || 'Unknown'}`,
-    15,
-    yPos
-);
+        doc.text(
+            `${row.profiles?.full_name || 'Unknown'}`,
+            15,
+            yPos
+        );
 
-doc.text(
-    `${reportRange.start} → ${reportRange.end}`,
-    60,
-    yPos
-);
+        doc.text(
+            `${reportRange.start} → ${reportRange.end}`,
+            60,
+            yPos
+        );
 
-doc.text(
-    `${row.leave_type}`,
-    120,
-    yPos,
-    { align: 'center' }
-);
+        doc.text(
+            `${row.leave_type}`,
+            120,
+            yPos,
+            { align: 'center' }
+        );
 
-doc.text(
-    `${reportRange.days}`,
-    150,
-    yPos,
-    { align: 'center' }
-);
+        doc.text(
+            `${reportRange.days}`,
+            150,
+            yPos,
+            { align: 'center' }
+        );
     });
 
     // Summary
