@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             case "ML": return "ML";
             case "VL-D": return "VL-D";
             case "SL-D": return "SL-D";
+            case "WL": return "WL";
             default: return "";
         }
     }
@@ -199,7 +200,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             SL2: 0,
             ML: 0,
             VL_D: 0,
-            SL_D: 0
+            SL_D: 0,
+            WL: 0
+
         };
     }
 
@@ -266,10 +269,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             "Sick Leave Days",
             "Maternity/Paternity",
             "Vacation Leave (Division Office)",
-            "Sick Leave (Division Office)"
+            "Sick Leave (Division Office)",
+            "Wellness leave"
         );
 
-        dateRow.push("", "", "", "", "", "");
+        dateRow.push("", "", "", "", "", "", "");
 
         sheetData.push(dayNameRow);
         sheetData.push(dateRow);
@@ -281,6 +285,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const name = leave.profiles?.full_name;
             if (!name) return;
 
+            const reportRange = getReportDateRange(
+                leave.start_date,
+                leave.end_date,
+                year,
+                month
+            );
+
+            if (!reportRange) return;
+
             if (!employeeStats[name]) {
                 employeeStats[name] = createLeaveCounter();
             }
@@ -288,7 +301,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const stats = employeeStats[name];
 
             const leaveType = normalizeLeaveType(leave.leave_type);
-            const days = calculateDays(leave.start_date, leave.end_date);
+            const days = reportRange.days;
 
             // total absence always increases
             stats.totalAbsence += days;
@@ -333,6 +346,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 case "SL_D":
                     stats.SL_D += days;
                     break;
+
+                case "WL":
+                    stats.WL += days;
+                    break;
             }
         });
 
@@ -354,16 +371,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             empLeaves.forEach(leave => {
 
-                const startDate = new Date(leave.start_date);
-                const startDay = startDate.getDate();
-                const totalLeaveDays = calculateDays(leave.start_date, leave.end_date);
+                const reportRange = getReportDateRange(
+                    leave.start_date,
+                    leave.end_date,
+                    year,
+                    month
+                );
 
-                let leaveCode = mapLeaveCode(leave.leave_type);
+                if (!reportRange) return;
+
+                const startDate = new Date(`${reportRange.start}T00:00:00Z`);
+                const startDay = startDate.getUTCDate();
+
+                const totalLeaveDays = reportRange.days;
+
+                const leaveCode = mapLeaveCode(leave.leave_type);
 
                 for (let i = 0; i < totalLeaveDays; i++) {
-                    employeeRow[startDay + i] = leaveCode;
+                    const dayColumn = startDay + i;
+
+                    if (dayColumn <= totalDays) {
+                        employeeRow[dayColumn] = leaveCode;
+                    }
                 }
             });
+
 
             // push summary (temporary fix for now)
             const stats = employeeStats[emp.full_name] || createLeaveCounter();
@@ -374,7 +406,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 stats.SL,
                 stats.ML,
                 stats.VL_D,
-                stats.SL_D
+                stats.SL_D,
+                stats.WL
             );
 
             sheetData.push(employeeRow);
@@ -396,7 +429,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             { wch: 12 },
             { wch: 15 },
             { wch: 20 },
-            { wch: 20 }
+            { wch: 20 },
+            { wch: 15 }
         ];
 
         // ======================================
@@ -405,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         worksheet["!merges"] = [
             {
                 s: { r: 0, c: 0 },
-                e: { r: 0, c: totalDays + 6 }
+                e: { r: 0, c: totalDays + 7 }
             }
         ];
 
@@ -507,6 +541,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Sick Leave filed to Division Office
                 if (C === totalDays + 6) {
                     worksheet[cellAddress].s.fill = { fgColor: { rgb: purple } };
+                }
+                // Wellness Leave
+                if (C === totalDays + 7) {
+                    worksheet[cellAddress].s.fill = {
+                        fgColor: { rgb: "FFD966" }
+                    };
                 }
 
                 // Employee names column
@@ -899,9 +939,57 @@ async function deleteEmployee(id) {
 
 // --- HELPER FUNCTIONS ---
 function calculateDays(start, end) {
-    if (!start || !end) return "-";
-    const diffTime = new Date(end) - new Date(start);
+    if (!start || !end) return 0;
+
+    const startDate = new Date(`${start}T00:00:00Z`);
+    const endDate = new Date(`${end}T00:00:00Z`);
+
+    const diffTime = endDate - startDate;
+
     return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+}
+
+function getReportDateRange(start, end, year, month) {
+    if (!start || !end) return null;
+
+    const reportStart = new Date(
+        Date.UTC(Number(year), Number(month) - 1, 1)
+    );
+
+    const reportEnd = new Date(
+        Date.UTC(Number(year), Number(month), 0)
+    );
+
+    const leaveStart = new Date(`${start}T00:00:00Z`);
+    const leaveEnd = new Date(`${end}T00:00:00Z`);
+
+    // Leave does not overlap the selected month
+    if (leaveEnd < reportStart || leaveStart > reportEnd) {
+        return null;
+    }
+
+    // Clip the leave to the selected month
+    const clippedStart = leaveStart > reportStart
+        ? leaveStart
+        : reportStart;
+
+    const clippedEnd = leaveEnd < reportEnd
+        ? leaveEnd
+        : reportEnd;
+
+    const days = Math.floor(
+        (clippedEnd - clippedStart) / (1000 * 60 * 60 * 24)
+    ) + 1;
+
+    const formatDate = (date) => {
+        return date.toISOString().split('T')[0];
+    };
+
+    return {
+        start: formatDate(clippedStart),
+        end: formatDate(clippedEnd),
+        days
+    };
 }
 
 function getStatusClass(status) {
@@ -1494,37 +1582,44 @@ async function renderLeaveCalendar() {
 }
 
 // --- 5. REPORTS ---
-let reportData = [];
-
 async function loadReportData() {
     const month = document.getElementById('report-month').value;
     const year = document.getElementById('report-year').value;
-    const monthName = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][parseInt(month) - 1];
+
+    const monthName = [
+        "January", "February", "March", "April",
+        "May", "June", "July", "August",
+        "September", "October", "November", "December"
+    ][parseInt(month) - 1];
 
     document.getElementById('report-month-text').textContent = monthName;
     document.getElementById('report-year-text').textContent = year;
 
-    const start = `${year}-${month}-01`;
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const end = `${year}-${month}-${daysInMonth}`;
+    // Always use properly formatted YYYY-MM-DD dates
+    const start = `${year}-${String(month).padStart(2, '0')}-01`;
+    const daysInMonth = new Date(Number(year), Number(month), 0).getDate();
+    const end = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
 
     const { data, error } = await supabaseClient
         .from('leave_requests')
         .select(`
-        leave_type,
-        start_date,
-        end_date,
-        is_filed_to_do,
-        status,
-        profiles!inner(full_name, employee_status)
-    `)
+            leave_type,
+            start_date,
+            end_date,
+            is_filed_to_do,
+            status,
+            profiles!inner(full_name, employee_status)
+        `)
         .eq('status', 'Approved')
         .lte('start_date', end)
         .gte('end_date', start);
 
-    if (error) return console.error(error);
+    if (error) {
+        console.error("Error loading report data:", error);
+        return;
+    }
 
-    reportData = data;
+    reportData = data || [];
 
     // Build table
     const tbody = document.getElementById('report-table-body');
@@ -1536,16 +1631,25 @@ async function loadReportData() {
     let notFiledDO = 0;
     const uniqueEmployees = new Set();
 
-    data.forEach(row => {
+    reportData.forEach(row => {
+
+        const reportRange = getReportDateRange(
+            row.start_date,
+            row.end_date,
+            year,
+            month
+        );
+
+        if (!reportRange) return;
 
         totalLeaves++;
 
-        const days = calculateDays(row.start_date, row.end_date);
-        totalDays += days;
+        totalDays += reportRange.days;
 
-        uniqueEmployees.add(row.profiles?.full_name || 'Unknown');
+        uniqueEmployees.add(
+            row.profiles?.full_name || 'Unknown'
+        );
 
-        // Use your real column
         if (row.is_filed_to_do === true) {
             filedDO++;
         } else {
@@ -1554,25 +1658,43 @@ async function loadReportData() {
 
         const tr = document.createElement('tr');
         tr.className = 'border-b';
+
         tr.innerHTML = `
-        <td class="p-2">${row.profiles?.full_name || 'Unknown'}</td>
-        <td class="p-2">${row.start_date} → ${row.end_date}</td>
-        <td class="p-2 text-center">${row.leave_type}</td>
-        <td class="p-2 text-center">${days}</td>
-    `;
+            <td class="p-2">
+                ${row.profiles?.full_name || 'Unknown'}
+            </td>
+
+            <td class="p-2">
+                ${reportRange.start} → ${reportRange.end}
+            </td>
+
+            <td class="p-2 text-center">
+                ${row.leave_type}
+            </td>
+
+            <td class="p-2 text-center">
+                ${reportRange.days}
+            </td>
+        `;
+
         tbody.appendChild(tr);
     });
 
     // Update summary numbers
-    document.getElementById('report-total-employees').textContent = uniqueEmployees.size;
+    document.getElementById('report-total-employees').textContent =
+        uniqueEmployees.size;
 
-    document.getElementById('report-total-leaves').textContent = totalLeaves;
+    document.getElementById('report-total-leaves').textContent =
+        totalLeaves;
 
-    document.getElementById('report-total-filed-do').textContent = filedDO;
+    document.getElementById('report-total-filed-do').textContent =
+        filedDO;
 
-    document.getElementById('report-total-not-filed-do').textContent = notFiledDO;
+    document.getElementById('report-total-not-filed-do').textContent =
+        notFiledDO;
 
-    document.getElementById('report-total-days').textContent = totalDays;
+    document.getElementById('report-total-days').textContent =
+        totalDays;
 
     // Show report area & export buttons
     document.getElementById('report-content').classList.remove('hidden');
@@ -1617,12 +1739,40 @@ async function exportAsPDF() {
             doc.addPage();
             yPos = 20;
         }
-        const days = calculateDays(row.start_date, row.end_date);
-        doc.text(`${row.profiles?.full_name || 'Unknown'}`, 15, yPos);
-        doc.text(`${row.start_date} → ${row.end_date}`, 60, yPos);
-        doc.text(`${row.leave_type}`, 120, yPos, { align: 'center' });
-        doc.text(`${days}`, 150, yPos, { align: 'center' });
-        yPos += 8;
+        const reportRange = getReportDateRange(
+            row.start_date,
+            row.end_date,
+            document.getElementById('report-month').value,
+            document.getElementById('report-year').value
+        );
+
+        if (!reportRange) return;
+
+        doc.text(
+            `${row.profiles?.full_name || 'Unknown'}`,
+            15,
+            yPos
+        );
+
+        doc.text(
+            `${reportRange.start} → ${reportRange.end}`,
+            60,
+            yPos
+        );
+
+        doc.text(
+            `${row.leave_type}`,
+            120,
+            yPos,
+            { align: 'center' }
+        );
+
+        doc.text(
+            `${reportRange.days}`,
+            150,
+            yPos,
+            { align: 'center' }
+        );
     });
 
     // Summary
