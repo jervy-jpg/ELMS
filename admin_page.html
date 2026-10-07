@@ -301,71 +301,81 @@
         <section id="reports-content" class="content-section hidden">
             <div class="bg-white rounded-lg shadow-sm border p-6">
                 <h3 class="text-lg font-semibold mb-4">Generate Report</h3>
-                <div class="flex flex-wrap gap-4 mb-6">
-                    <select id="report-month" class="border rounded px-3 py-1.5">
-                        <option value="05">May</option>
-                        <option value="06" selected>June</option>
-                    </select>
-                    <select id="report-year" class="border rounded px-3 py-1.5">
-                        <option value="2026" selected>2026</option>
-                        <option value="2025">2025</option>
-                    </select>
+                <select id="report-month" class="border rounded px-3 py-1.5">
+                    <option value="01">January</option>
+                    <option value="02">February</option>
+                    <option value="03">March</option>
+                    <option value="04">April</option>
+                    <option value="05">May</option>
+                    <option value="06">June</option>
+                    <option value="07">July</option>
+                    <option value="08">August</option>
+                    <option value="09">September</option>
+                    <option value="10" selected>October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+                
+                <select id="report-year" class="border rounded px-3 py-1.5">
+                    <option value="2026" selected>2026</option>
+                    <option value="2025">2025</option>
+                </select>
 
-                    <button id="generate-report" class="bg-blue-600 text-white px-4 py-2 rounded">Load Data</button>
+                <button id="generate-report" class="bg-blue-600 text-white px-4 py-2 rounded">Load Data</button>
 
-                    <button id="export-pdf" class="bg-red-600 text-white px-4 py-2 rounded hidden">Export
-                        PDF
-                    </button>
+                <button id="export-pdf" class="bg-red-600 text-white px-4 py-2 rounded hidden">Export
+                    PDF
+                </button>
 
-                    <button id="export-excel" class="bg-green-600 text-white px-4 py-2 rounded hidden">
-                        Export Excel
-                    </button>
+                <button id="export-excel" class="bg-green-600 text-white px-4 py-2 rounded hidden">
+                    Export Excel
+                </button>
 
 
-                </div>
+            </div>
 
-                <div id="report-content" class="border rounded p-4 hidden">
-                    <h2 class="text-center text-xl font-bold mb-2">LEAVE MANAGEMENT REPORT</h2>
-                    <h3 class="text-center text-gray-600 mb-6">For the Month of <span id="report-month-text"></span>
-                        <span id="report-year-text"></span>
-                    </h3>
+            <div id="report-content" class="border rounded p-4 hidden">
+                <h2 class="text-center text-xl font-bold mb-2">LEAVE MANAGEMENT REPORT</h2>
+                <h3 class="text-center text-gray-600 mb-6">For the Month of <span id="report-month-text"></span>
+                    <span id="report-year-text"></span>
+                </h3>
 
-                    <table class="w-full text-sm mb-6 border">
-                        <thead>
-                            <tr class="bg-gray-100 border-b">
-                                <th class="p-2 text-left">Employee Name</th>
-                                <th class="p-2 text-left">Leave Dates</th>
-                                <th class="p-2 text-center">Type</th>
-                                <th class="p-2 text-center">Days</th>
-                            </tr>
-                        </thead>
-                        <tbody id="report-table-body">
-                            <!-- Loaded via JS -->
-                        </tbody>
-                    </table>
+                <table class="w-full text-sm mb-6 border">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="p-2 text-left">Employee Name</th>
+                            <th class="p-2 text-left">Leave Dates</th>
+                            <th class="p-2 text-center">Type</th>
+                            <th class="p-2 text-center">Days</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-table-body">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-gray-50 p-3 border rounded">
-                            <strong>Total Employees on Leave:</strong> <span id="report-total-employees">0</span>
-                        </div>
-                        <div class="bg-gray-50 p-3 border rounded">
-                            <strong>Total Approved Leaves:</strong> <span id="report-total-leaves">0</span>
-                        </div>
-                        <div class="bg-gray-50 p-3 border rounded">
-                            <strong>Total Leave Days Combined:</strong> <span id="report-total-days">0</span>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-50 p-3 border rounded">
+                        <strong>Total Employees on Leave:</strong> <span id="report-total-employees">0</span>
+                    </div>
+                    <div class="bg-gray-50 p-3 border rounded">
+                        <strong>Total Approved Leaves:</strong> <span id="report-total-leaves">0</span>
+                    </div>
+                    <div class="bg-gray-50 p-3 border rounded">
+                        <strong>Total Leave Days Combined:</strong> <span id="report-total-days">0</span>
+                    </div>
 
-                        <div class="bg-gray-50 p-3 border rounded">
-                            <strong>Filed for DO:</strong>
-                            <span id="report-total-filed-do">0</span>
-                        </div>
+                    <div class="bg-gray-50 p-3 border rounded">
+                        <strong>Filed for DO:</strong>
+                        <span id="report-total-filed-do">0</span>
+                    </div>
 
-                        <div class="bg-gray-50 p-3 border rounded">
-                            <strong>Not Filed for DO:</strong>
-                            <span id="report-total-not-filed-do">0</span>
-                        </div>
+                    <div class="bg-gray-50 p-3 border rounded">
+                        <strong>Not Filed for DO:</strong>
+                        <span id="report-total-not-filed-do">0</span>
                     </div>
                 </div>
+            </div>
             </div>
         </section>
 
