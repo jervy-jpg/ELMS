@@ -173,6 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // SAME DESIGN AS FASHS TRACKER
     // ======================================
 
+
     function mapLeaveCode(type) {
         switch (type) {
             case "VL": return "VL";
@@ -182,12 +183,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             case "SL1": return "SL1";
             case "SL2": return "SL2";
             case "ML": return "ML";
+            case "PL": return "PL";
             case "VL-D": return "VL-D";
             case "SL-D": return "SL-D";
             case "WL": return "WL";
+            case "FL": return "FL";
+            case "SPL": return "SPL";
+            case "Solo": return "Solo";
+            case "STL": return "STL";
+            case "VAWC": return "VAWC";
+            case "RP": return "RP";
+            case "SLBW": return "SLBW";
+            case "SCL": return "SCL";
+            case "AL": return "AL";
             default: return "";
         }
     }
+
+
 
     function createLeaveCounter() {
         return {
@@ -199,15 +212,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             SL1: 0,
             SL2: 0,
             ML: 0,
+            PL: 0,
             VL_D: 0,
             SL_D: 0,
-            WL: 0
-
+            WL: 0,
+            FL: 0,
+            SPL: 0,
+            Solo: 0,
+            STL: 0,
+            VAWC: 0,
+            RP: 0,
+            SLBW: 0,
+            SCL: 0,
+            AL: 0
         };
     }
 
+
     function normalizeLeaveType(type) {
-        return type.replace("-", "_");
+        return String(type || "").replace(/-/g, "_");
     }
 
     async function exportAsExcel() {
@@ -262,6 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             dateRow.push(d);
         }
 
+
         // SUMMARY COLUMNS (UPDATED)
         dayNameRow.push(
             "Total Absence Days",
@@ -270,10 +294,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             "Maternity/Paternity",
             "Vacation Leave (Division Office)",
             "Sick Leave (Division Office)",
-            "Wellness leave"
+            "Wellness Leave",
+            "Mandatory/Forced Leave",
+            "Special Privilege Leave",
+            "Solo Parent Leave",
+            "Study Leave",
+            "10-Day VAWC Leave",
+            "Rehabilitation Privilege",
+            "Special Leave Benefits for Women",
+            "Special Emergency (Calamity) Leave",
+            "Adoption Leave"
         );
 
-        dateRow.push("", "", "", "", "", "", "");
+        // Keep 16 blank cells to match the 16 summary columns above
+        dateRow.push(
+            "", "", "", "", "", "", "", "", "",
+            "", "", "", "", "", "", ""
+        );
 
         sheetData.push(dayNameRow);
         sheetData.push(dateRow);
@@ -338,6 +375,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 case "ML":
                     stats.ML += days;
                     break;
+                case "PL":
+                    stats.PL += days;
+                    break;
 
                 case "VL_D":
                     stats.VL_D += days;
@@ -349,6 +389,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 case "WL":
                     stats.WL += days;
+                    break;
+                case "FL":
+                    stats.FL += days;
+                    break;
+                case "SPL":
+                    stats.SPL += days;
+                    break;
+                case "Solo":
+                    stats.Solo += days;
+                    break;
+                case "STL":
+                    stats.STL += days;
+                    break;
+                case "VAWC":
+                    stats.VAWC += days;
+                    break;
+                case "RP":
+                    stats.RP += days;
+                    break;
+                case "SLBW":
+                    stats.SLBW += days;
+                    break;
+                case "SCL":
+                    stats.SCL += days;
+                    break;
+                case "AL":
+                    stats.AL += days;
                     break;
             }
         });
@@ -400,15 +467,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             // push summary (temporary fix for now)
             const stats = employeeStats[emp.full_name] || createLeaveCounter();
 
+
             employeeRow.push(
                 stats.totalAbsence,
                 stats.VL,
                 stats.SL,
-                stats.ML,
+                stats.ML + stats.PL,
                 stats.VL_D,
                 stats.SL_D,
-                stats.WL
+                stats.WL,
+                stats.FL,
+                stats.SPL,
+                stats.Solo,
+                stats.STL,
+                stats.VAWC,
+                stats.RP,
+                stats.SLBW,
+                stats.SCL,
+                stats.AL
             );
+
 
             sheetData.push(employeeRow);
         });
@@ -421,16 +499,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         // ======================================
         // COLUMN WIDTHS (UPDATED for 2 extra columns)
         // ======================================
+
         worksheet["!cols"] = [
             { wch: 35 },
             ...Array(totalDays).fill({ wch: 5 }),
-            { wch: 12 },
-            { wch: 12 },
-            { wch: 12 },
-            { wch: 15 },
-            { wch: 20 },
-            { wch: 20 },
-            { wch: 15 }
+            { wch: 14 }, // Total Absence Days
+            { wch: 14 }, // Vacation Leave Days
+            { wch: 14 }, // Sick Leave Days
+            { wch: 17 }, // Maternity/Paternity
+            { wch: 22 }, // Vacation Leave - Division Office
+            { wch: 22 }, // Sick Leave - Division Office
+            { wch: 15 }, // Wellness Leave
+            { wch: 20 }, // Mandatory/Forced Leave
+            { wch: 20 }, // Special Privilege Leave
+            { wch: 18 }, // Solo Parent Leave
+            { wch: 15 }, // Study Leave
+            { wch: 17 }, // VAWC Leave
+            { wch: 18 }, // Rehabilitation Privilege
+            { wch: 24 }, // Special Leave Benefits for Women
+            { wch: 24 }, // Special Emergency/Calamity Leave
+            { wch: 15 }  // Adoption Leave
         ];
 
         // ======================================
@@ -439,7 +527,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         worksheet["!merges"] = [
             {
                 s: { r: 0, c: 0 },
-                e: { r: 0, c: totalDays + 7 }
+                e: { r: 0, c: totalDays + 16 }
             }
         ];
 
@@ -453,6 +541,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const orange = "F4B183";        // Maternity/Paternity
         const darkOrange = "ED7D31";    // Vacation Leave filed to Division Office
         const purple = "7030A0";        // Sick Leave filed to Division Office
+
         const white = "FFFFFF";
 
         // ======================================
@@ -548,6 +637,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                         fgColor: { rgb: "FFD966" }
                     };
                 }
+
+
+
+                // Additional summary column colors
+                const summaryColors = {
+                    8: "A6A6A6",  // Mandatory/Forced Leave
+                    9: "70AD47",  // Special Privilege Leave
+                    10: "9BC2E6", // Solo Parent Leave
+                    11: "8497B0", // Study Leave
+                    12: "F4CCCC", // VAWC Leave
+                    13: "C9B1D9", // Rehabilitation Privilege
+                    14: "E6B8AF", // Special Leave Benefits for Women
+                    15: "B4A7D6", // Special Emergency/Calamity Leave
+                    16: "76C7C0"  // Adoption Leave
+                };
+
+
+                const summaryOffset = C - totalDays;
+
+                if (summaryColors[summaryOffset]) {
+                    worksheet[cellAddress].s.fill = {
+                        fgColor: { rgb: summaryColors[summaryOffset] }
+                    };
+                }
+
+
 
                 // Employee names column
                 if (R >= 3 && C === 0) {
