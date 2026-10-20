@@ -239,7 +239,7 @@ async function handleFileLeaveSubmit(e) {
   const startDate = document.getElementById('start_date').value;
   const endDate = document.getElementById('end_date').value;
   const reason = document.getElementById('reason_brief').value;
-  
+
 
   const { error } = await supabase
     .from('leave_requests')
@@ -250,7 +250,7 @@ async function handleFileLeaveSubmit(e) {
         start_date: startDate,
         end_date: endDate,
         reason: reason,
-       
+
         status: "Pending",
 
         // ✅ >>> NEW FIELDS ADDED HERE <<< ✅
@@ -325,9 +325,26 @@ async function loadLeaveHistory() {
   });
 }
 
+
+function getPhilippineTodayISO() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+
+  const values = Object.fromEntries(
+    parts.map(part => [part.type, part.value])
+  );
+
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 // recent leave request functions
 async function loadRecentRequests() {
   const { data: { user } } = await supabase.auth.getUser();
+
 
   const { data, error } = await supabase
     .from('leave_requests')
@@ -335,12 +352,14 @@ async function loadRecentRequests() {
       leave_type,
       status,
       created_at,
-       start_date,
+      start_date,
       end_date
     `)
     .eq('user_id', user.id)
+    .gte('end_date', getPhilippineTodayISO())
     .order('created_at', { ascending: false })
     .limit(2);
+
 
   if (error) {
     console.error("Recent requests error:", error.message);
@@ -415,18 +434,34 @@ async function loadDashboardStats() {
   let totalDays = 0;
   let latestApproved = null;
 
+
+  const today = getPhilippineTodayISO();
+
   data.forEach(row => {
-    if (row.status === "Pending") pending++;
+    const isExpired = row.end_date < today;
+
+    if (row.status === "Pending" && !isExpired) {
+      pending++;
+    }
 
     if (row.status === "Approved") {
-      approved++;
+      // Keep historical leave days in the total used days.
       totalDays += calculateDays(row.start_date, row.end_date);
 
-      if (!latestApproved || new Date(row.start_date) > new Date(latestApproved.start_date)) {
-        latestApproved = row;
+      // Only count active or upcoming approved leave requests.
+      if (!isExpired) {
+        approved++;
+
+        if (
+          !latestApproved ||
+          row.start_date > latestApproved.start_date
+        ) {
+          latestApproved = row;
+        }
       }
     }
   });
+
 
   document.getElementById('pending-request-count').textContent = pending;
   document.getElementById('approved-leaves-count').textContent = approved;
