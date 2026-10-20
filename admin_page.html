@@ -32,7 +32,7 @@
 <body class="bg-gray-50 flex h-screen overflow-hidden">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-gray-800 text-white flex flex-col">
+    <aside id="admin-sidebar" class="w-64 bg-gray-800 text-white flex flex-col">
 
         <div class="p-4 border-b border-gray-700">
             <h2 class="text-xl font-bold">Admin Panel</h2>
@@ -73,10 +73,20 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto">
-        <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
-            <h1 id="page-title" class="text-xl font-semibold text-gray-800">Admin Dashboard</h1>
+    <main class="flex-1 min-w-0 overflow-x-hidden">
+
+        <header class="bg-white border-b px-4 py-3 md:px-6 md:py-4 flex items-center gap-3">
+            <button id="admin-menu-toggle" type="button"
+                class="md:hidden inline-flex items-center justify-center p-2 rounded border border-gray-300 text-gray-700"
+                aria-label="Open navigation menu" aria-controls="admin-sidebar" aria-expanded="false">
+                <i class="fa fa-bars" aria-hidden="true"></i>
+            </button>
+
+            <h1 id="page-title" class="text-lg md:text-xl font-semibold text-gray-800 min-w-0">
+                Admin Dashboard
+            </h1>
         </header>
+
 
         <div class="p-6">
 
@@ -316,7 +326,7 @@
                     <option value="11">November</option>
                     <option value="12">December</option>
                 </select>
-                
+
                 <select id="report-year" class="border rounded px-3 py-1.5">
                     <option value="2026" selected>2026</option>
                     <option value="2025">2025</option>

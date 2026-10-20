@@ -118,14 +118,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
 
             const pageId = e.currentTarget.getAttribute('href').substring(1);
             showAdminPage(pageId);
+
+            // Close the mobile menu after selecting a page
+            closeAdminMenu();
         });
     });
+
+    // Mobile navigation controls
+    const menuToggle = document.getElementById('admin-menu-toggle');
+
+    function closeAdminMenu() {
+        document.body.classList.remove('mobile-menu-open');
+
+        if (menuToggle) {
+            menuToggle.setAttribute('aria-expanded', 'false');
+            menuToggle.setAttribute('aria-label', 'Open navigation menu');
+        }
+    }
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+            const isOpen = document.body.classList.toggle('mobile-menu-open');
+
+            menuToggle.setAttribute('aria-expanded', String(isOpen));
+            menuToggle.setAttribute(
+                'aria-label',
+                isOpen ? 'Close navigation menu' : 'Open navigation menu'
+            );
+        });
+    }
+
+    // Close the menu with Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeAdminMenu();
+        }
+    });
+
 
     document.getElementById('admin-logout').addEventListener('click', handleLogout);
 
@@ -1259,12 +1295,7 @@ function renderRequestsTable(data) {
             <td class="px-3 py-2 text-gray-600">${row.reason || "-"}</td>
          <td class="px-3 py-2">
                     ${getStatusBadge(row.status)}
-                                                    </td>
-          
-            
-           
-           
-           
+                                                    </td>          
          <td class="py-3 px-2 text-right">
 <div class="flex justify-end gap-2 items-center">
 
@@ -2557,7 +2588,7 @@ async function generateCSForm6(requestId) {
                 }
             }
 
-            
+
 
             zip.file(
                 drawingPath,
