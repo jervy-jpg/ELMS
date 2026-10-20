@@ -1,54 +1,90 @@
-body{
-     font-family :Arial, Helvetica, sans-serif;
-     background:linear-gradient(135deg,#70f907,#2f0173);
-     display: flex;
-     justify-content: center;
-     align-items: center;
-     height: 100vh;
-     margin:0;
-     position: relative;
-     overflow: hidden;
+/* ========================================
+   ELMS LOGIN PAGE
+   Responsive desktop and mobile layout
+   ======================================== */
+
+* {
+    box-sizing: border-box;
 }
 
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg, #70f907, #2f0173);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    margin: 0;
+    padding: 24px 16px;
+
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Background logo */
+
 .background-logo {
-    position:absolute;
-    left: 10px;%;
-    top:50%;
-    transform:translateY(-50%);
-    width: 700px;
-    height:auto;
-    object-fit:contain;
+    position: fixed;
+    left: -70px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 850px;
+    max-width: none;
+    height: auto;
+    object-fit: contain;
+
     opacity: 0.18;
     z-index: 1;
     pointer-events: none;
-    border-radius:50%;
-    clipPath:circle(50%)
+
+    border-radius: 50%;
+    clip-path: circle(50%);
 }
 
-.login-container{
-    background-color:rgb(65, 7, 159);
-    padding: 40px 30px;
-    width: 350px;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0,3);
+
+/* Login card */
+
+.login-container {
+    background-color: rgb(65, 7, 159);
+
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 500px;
+
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+
     color: white;
-    position:relative;
+    position: relative;
     z-index: 2;
 }
+
+
+/* Header and logo */
 .login-header {
     display: flex;
     align-items: center;
+    gap: 12px;
     margin-bottom: 35px;
-    flex-wrap: nowrap;
+    min-width: 0;
 }
 
 .login-header h1 {
-    color:white;
-    font: size 20px;
-    line-height: 1.30;
+    color: white;
+    font-size: 20px;
+    line-height: 1.3;
     font-weight: 700;
-    margin:0;
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
+
 .header-logo {
     width: 90px;
     height: 90px;
@@ -56,76 +92,221 @@ body{
     flex-shrink: 0;
     border-radius: 50%;
 }
-form{
+
+/* Login form */
+form {
     display: flex;
-    flex-direction:column;
-}
-label{
-    color: white;
-    margin-bottom: 5px;
-    font-weight:bold;
+    flex-direction: column;
+    min-width: 0;
 }
 
-input{
-    padding: 10px;
+label {
+    color: white;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
     margin-bottom: 15px;
+
     border: 1px solid #ccc;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 16px;
 }
-input:focus{
+
+input:focus {
     border-color: #6cf523;
     box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-    outline:none
-    border:#4CAF50
+    outline: 2px solid #6cf523;
+    outline-offset: 1px;
 }
-.forgot{
+
+/* Forgot password */
+.forgot {
     display: flex;
     justify-content: flex-end;
+    margin-bottom: 8px;
 }
 
 .forgot a {
     font-size: 15px;
     text-decoration: none;
-    color: #007bff;
+    color: #d6ffbd;
 }
 
-button{
+.forgot a:hover {
+    text-decoration: underline;
+}
+
+/* Buttons */
+button {
     padding: 14px 20px;
     font-size: 16px;
     font-weight: bold;
-    border:none;
+
+    border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition:all 0.3s;
-    width:100%;
-    margin:5px 0;
+
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    margin: 5px 0;
 }
-.btn-login{
-    background-color: #4caf50;
-    Color: white;
-}
+
+.btn-login,
 .btn-signup {
     background-color: #4caf50;
-    color:white;
+    color: white;
 }
-button:hover{
-    transform:translateY(-3px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.25);
+
+button:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
+
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid #d6ffbd;
+    outline-offset: 3px;
+}
+
+.buttons-container,
+.button-group {
+    display: flex;
+    gap: 12px;
+    min-width: 0;
+}
+
 .buttons-container {
-    display:flex;
-    gap:12px;
-    margin-top:10px;
+    margin-top: 10px;
 }
+
 .buttons-container button {
-    width: 50px;
-    flex:1;
-}
-.button-group{
-    display:flex;
-    gap:10px
+    flex: 1;
+    min-width: 0;
 }
 
+/* Small phones */
+@media (max-width: 400px) {
+    body {
+        align-items: center;
+        padding: 20px 12px;
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 380px;
+        padding: 32px 22px;
+        margin: auto 0;
+        border-radius: 16px;
+    }
+
+    .login-header {
+        gap: 10px;
+        margin-bottom: 28px;
+    }
+
+    .header-logo {
+        width: 72px;
+        height: 72px;
+    }
+
+    .login-header h1 {
+        font-size: 18px;
+    }
+
+    .background-logo {
+        width: 135vw;
+        max-width: none;
+        left: -25vw;
+        opacity: 0.18;
+    }
+
+    input {
+        min-height: 46px;
+    }
+
+    button {
+        min-height: 48px;
+    }
+}
 
 
+/* ========================================
+   ELMS SIGN UP PAGE RESPONSIVENESS
+   ======================================== */
+
+/* Allow the signup card to fit its content */
+.login-container:has(.btn-signup) {
+    width: calc(100% - 32px);
+    max-width: 500px;
+    box-sizing: border-box;
+}
+
+/* Keep form controls inside the card */
+.login-container form {
+    width: 100%;
+    min-width: 0;
+}
+
+.login-container form label {
+    display: block;
+    text-align: left;
+    margin-top: 12px;
+}
+
+.login-container form input {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: 16px;
+    min-height: 44px;
+}
+
+.login-container .btn-signup {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    box-sizing: border-box;
+    margin-top: 20px;
+}
+
+/* Smaller screens */
+@media (max-width: 480px) {
+    .login-container:has(.btn-signup) {
+        width: calc(100% - 24px);
+        max-width: 380px;
+        padding: 28px 20px;
+        margin: 20px auto;
+    }
+
+    .login-container .login-header h1 {
+        font-size: 1.25rem;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .login-container form input {
+        padding: 12px;
+    }
+
+    .login-container>p {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+}
+
+/* Very narrow phones */
+@media (max-width: 360px) {
+    .login-container:has(.btn-signup) {
+        padding: 22px 14px;
+    }
+
+    .login-container .login-header h1 {
+        font-size: 1.1rem;
+    }
+}
