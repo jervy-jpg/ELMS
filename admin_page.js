@@ -6,7 +6,36 @@ let currentAdmin = null;
 let currentCalendarDate = new Date();
 let pendingDeclineId = null;
 
+// Helper to load the official CS Form 6 template
+async function loadCSForm6Template() {
+    const templatePath =
+        "assets/templates/FASHS_Application_for_Leave.xlsx";
 
+    if (typeof window.XLSX === "undefined") {
+        throw new Error("The Excel library (XLSX) is not loaded.");
+    }
+
+    if (typeof window.JSZip === "undefined") {
+        throw new Error("The JSZip library is not loaded.");
+    }
+
+    const response = await fetch(templatePath);
+
+    if (!response.ok) {
+        throw new Error(
+            `Could not load the official leave form template. HTTP ${response.status}`
+        );
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+
+    return window.XLSX.read(arrayBuffer, {
+        type: "array",
+        cellStyles: true
+    });
+}
+
+// Your existing JavaScript continues below...
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1287,6 +1316,12 @@ ${row.status === "Pending" ? `
 
 ` : ``}
 
+<button
+    onclick="generateCSForm6('${row.id}')"
+    class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1 rounded whitespace-nowrap">
+    Generate CS Form No. 6
+</button>
+
 </div>
 </td>
         `;
@@ -2059,4 +2094,546 @@ function confirmModal(message, onConfirm) {
             }
         ]
     });
+}
+
+
+
+
+async function generateCSForm6(requestId) {
+    try {
+        // 1. Check required libraries.
+        if (!window.XLSX) {
+            throw new Error("Excel library (XLSX) is not loaded.");
+        }
+
+        if (!window.JSZip) {
+            throw new Error("JSZip is not loaded.");
+        }
+
+        // 2. Retrieve the selected leave request and employee name.
+        const { data: request, error } = await supabaseClient
+            .from("leave_requests")
+            .select(`
+                id,
+                created_at,
+                leave_type,
+                start_date,
+                end_date,
+                profiles (
+                    full_name
+                )
+            `)
+            .eq("id", requestId)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        if (!request) {
+            throw new Error("Leave request not found.");
+        }
+
+        // 3. Format dates for the official form.
+        function formatDate(value) {
+            if (!value) {
+                return "";
+            }
+
+            const date = new Date(
+                /^\d{4}-\d{2}-\d{2}$/.test(value)
+                    ? `${value}T00:00:00`
+                    : value
+            );
+
+            if (Number.isNaN(date.getTime())) {
+                return String(value);
+            }
+
+            return date.toLocaleDateString("en-PH", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+        }
+
+        const fullName = request.profiles?.full_name || "";
+        const dateFiled = formatDate(request.created_at);
+        const leaveType = request.leave_type || "";
+
+        const normalizedLeaveType = String(leaveType)
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
+
+        // 4. Recognize official leave names and ELMS abbreviations.
+        const leaveTypeAliases = {
+            vacationleave: "Vacation Leave",
+            vl: "Vacation Leave",
+            vl1: "Vacation Leave",
+            vl2: "Vacation Leave",
+
+            mandatoryforcedleave: "Mandatory/Forced Leave",
+            mandatoryleave: "Mandatory/Forced Leave",
+            forcedleave: "Mandatory/Forced Leave",
+
+            sickleave: "Sick Leave",
+            sl: "Sick Leave",
+            sl1: "Sick Leave",
+            sl2: "Sick Leave",
+
+            maternityleave: "Maternity Leave",
+            ml: "Maternity Leave",
+
+            paternityleave: "Paternity Leave",
+            pl: "Paternity Leave",
+
+            specialprivilegeleave: "Special Privilege Leave",
+            soloparentleave: "Solo Parent Leave",
+            studyleave: "Study Leave",
+
+            "10dayvawc": "10-Day VAWC Leave",
+            vawc: "10-Day VAWC Leave",
+
+            rehabilitationprivilege: "Rehabilitation Privilege",
+
+            specialleavebenefitsforwomen:
+                "Special Leave Benefits for Women",
+
+            specialemergencycalamityleave:
+                "Special Emergency (Calamity) Leave",
+
+            adoptionleave: "Adoption Leave",
+
+            wellnessleave: "Wellness Leave",
+            wl: "Wellness Leave"
+        };
+
+        const officialLeaveTypes = [
+            "Vacation Leave",
+            "Mandatory/Forced Leave",
+            "Sick Leave",
+            "Maternity Leave",
+            "Paternity Leave",
+            "Special Privilege Leave",
+            "Solo Parent Leave",
+            "Study Leave",
+            "10-Day VAWC Leave",
+            "Rehabilitation Privilege",
+            "Special Leave Benefits for Women",
+            "Special Emergency (Calamity) Leave",
+            "Adoption Leave"
+        ];
+
+        const displayLeaveType =
+            leaveTypeAliases[normalizedLeaveType] || leaveType;
+
+        const isWellnessLeave =
+            normalizedLeaveType === "wellnessleave" ||
+            normalizedLeaveType === "wl";
+
+        const isOfficialLeaveType = officialLeaveTypes.some(
+            type =>
+                type.toLowerCase().replace(/[^a-z0-9]/g, "") ===
+                normalizedLeaveType
+        ) || Object.entries(leaveTypeAliases).some(
+            ([alias, officialName]) =>
+                alias === normalizedLeaveType &&
+                officialLeaveTypes.includes(officialName)
+        );
+        console.log("CS Form 6 request:", request);
+        console.log("Employee profile:", request.profiles);
+        console.log("Employee name:", fullName);
+        console.log("Filing date:", dateFiled);
+        console.log("Leave type:", leaveType);
+        console.log("Start date:", request.start_date);
+        console.log("End date:", request.end_date);
+
+        const inclusiveDates =
+            request.start_date === request.end_date
+                ? formatDate(request.start_date)
+                : `${formatDate(request.start_date)} to ${formatDate(request.end_date)}`;
+
+        // 5. Load the original official Excel template.
+        const templatePath =
+            "assets/templates/FASHS_Application_for_Leave.xlsx";
+
+        const templateResponse = await fetch(templatePath);
+
+        if (!templateResponse.ok) {
+            throw new Error(
+                `Could not load the official template. HTTP ${templateResponse.status}`
+            );
+        }
+
+        const templateBuffer = await templateResponse.arrayBuffer();
+
+        const zip = await window.JSZip.loadAsync(templateBuffer);
+
+        const sheetPath = "xl/worksheets/sheet1.xml";
+        const sheetFile = zip.file(sheetPath);
+
+        if (!sheetFile) {
+            throw new Error(
+                "The first worksheet was not found in the template."
+            );
+        }
+
+        // 6. Read the worksheet XML.
+        const parser = new DOMParser();
+        const serializer = new XMLSerializer();
+
+        const sheetXml = await sheetFile.async("text");
+
+        const sheetDoc = parser.parseFromString(
+            sheetXml,
+            "application/xml"
+        );
+
+        if (sheetDoc.getElementsByTagName("parsererror").length > 0) {
+            throw new Error("The original worksheet XML is invalid.");
+        }
+
+        const spreadsheetNs =
+            "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+        // 7. Replace a cell's contents while preserving its style.
+        function setTemplateCell(cellAddress, value) {
+            const cells = Array.from(
+                sheetDoc.getElementsByTagNameNS(spreadsheetNs, "c")
+            );
+
+            const cell = cells.find(
+                item => item.getAttribute("r") === cellAddress
+            );
+
+            if (!cell) {
+                throw new Error(
+                    `Template cell ${cellAddress} was not found.`
+                );
+            }
+
+            // Keep cell attributes such as its original style.
+            while (cell.firstChild) {
+                cell.removeChild(cell.firstChild);
+            }
+
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
+                cell.removeAttribute("t");
+                return;
+            }
+
+            cell.setAttribute("t", "inlineStr");
+
+            const inlineString = sheetDoc.createElementNS(
+                spreadsheetNs,
+                "is"
+            );
+
+            const textNode = sheetDoc.createElementNS(
+                spreadsheetNs,
+                "t"
+            );
+
+            textNode.setAttributeNS(
+                "http://www.w3.org/XML/1998/namespace",
+                "xml:space",
+                "preserve"
+            );
+
+            textNode.textContent = String(value);
+
+            inlineString.appendChild(textNode);
+            cell.appendChild(inlineString);
+        }
+
+        // 8. Populate the template.
+        // NOTE: B6 is provisional and must be visually verified.
+        setTemplateCell("E5", fullName);
+        setTemplateCell("B6", dateFiled);
+        setTemplateCell("B48", inclusiveDates);
+
+        // TEMPORARY DEBUG: inspect the worksheet values before downloading.
+        const debugCells = ["E5", "B6", "B48", "B41"];
+
+        for (const address of debugCells) {
+            const cell = Array.from(
+                sheetDoc.getElementsByTagNameNS(spreadsheetNs, "c")
+            ).find(item => item.getAttribute("r") === address);
+
+            console.log(
+                `Worksheet cell ${address}:`,
+                cell ? cell.outerHTML : "CELL NOT FOUND"
+            );
+        }
+
+        // Wellness Leave is entered under "Others" on this form.
+        // Other unrecognized/custom leave types also go under "Others".
+        if (isWellnessLeave || !isOfficialLeaveType) {
+            setTemplateCell(
+                "B41",
+                displayLeaveType || "Other Leave"
+            );
+        }
+
+        // Remove only the four empty text boxes that cover generated data.
+        // This edits the downloaded copy, not the original template.
+
+
+        // Automatically select the matching official leave checkbox.
+        // This modifies only the generated workbook copy.
+        const vmlPath = "xl/drawings/vmlDrawing1.vml";
+        const vmlFile = zip.file(vmlPath);
+
+        if (vmlFile) {
+            const vmlXml = await vmlFile.async("text");
+            const vmlDoc = parser.parseFromString(
+                vmlXml,
+                "application/xml"
+            );
+
+            const excelNs =
+                "urn:schemas-microsoft-com:office:excel";
+
+            // Checkbox anchor rows identified from the original template.
+            const checkboxRows = {
+                "Vacation Leave": 9,
+                "Mandatory/Forced Leave": 11,
+                "Sick Leave": 13,
+                "Maternity Leave": 15,
+                "Paternity Leave": 17,
+                "Special Privilege Leave": 19,
+                "Solo Parent Leave": 21,
+                "Study Leave": 23,
+                "10-Day VAWC Leave": 25,
+                "Rehabilitation Privilege": 27,
+                "Special Leave Benefits for Women": 29,
+                "Special Emergency (Calamity) Leave": 31,
+                "Adoption Leave": 33
+            };
+
+            const selectedRow =
+                checkboxRows[displayLeaveType] ?? null;
+
+            const clientDataNodes = Array.from(
+                vmlDoc.getElementsByTagNameNS(
+                    excelNs,
+                    "ClientData"
+                )
+            );
+
+            console.log(
+                "VML checkbox controls:",
+                JSON.stringify(
+                    clientDataNodes.map((clientData, index) => {
+                        const anchor = clientData.getElementsByTagNameNS(
+                            excelNs,
+                            "Anchor"
+                        )[0];
+
+                        return {
+                            index,
+                            objectType: clientData.getAttribute("ObjectType"),
+                            anchor: anchor?.textContent.trim(),
+                            checked: clientData.getElementsByTagNameNS(
+                                excelNs,
+                                "Checked"
+                            )[0]?.textContent
+                        };
+                    }),
+                    null,
+                    2
+                )
+            );
+
+
+            for (const clientData of clientDataNodes) {
+                if (
+                    clientData.getAttribute("ObjectType") !==
+                    "Checkbox"
+                ) {
+                    continue;
+                }
+
+                const anchor = clientData.getElementsByTagNameNS(
+                    excelNs,
+                    "Anchor"
+                )[0];
+
+                if (!anchor) {
+                    continue;
+                }
+
+                const anchorValues = anchor.textContent
+                    .split(",")
+                    .map(value => Number(value.trim()));
+
+                const startRow = anchorValues[2];
+
+                // Only modify the 13 official leave-type checkboxes.
+                if (!Object.values(checkboxRows).includes(startRow)) {
+                    continue;
+                }
+
+                let checkedNode = clientData.getElementsByTagNameNS(
+                    excelNs,
+                    "Checked"
+                )[0];
+
+                const shouldBeChecked =
+                    selectedRow !== null &&
+                    startRow === selectedRow;
+
+                if (!checkedNode) {
+                    checkedNode = vmlDoc.createElementNS(
+                        excelNs,
+                        "Checked"
+                    );
+
+                    clientData.appendChild(checkedNode);
+                }
+
+                checkedNode.textContent =
+                    shouldBeChecked ? "1" : "0";
+            }
+
+            zip.file(
+                vmlPath,
+                serializer.serializeToString(vmlDoc)
+            );
+
+            console.log(
+                "CS Form 6 checkbox selection:",
+                displayLeaveType,
+                "Selected row:",
+                selectedRow
+            );
+        }
+
+        // Remove only empty text boxes covering generated data.
+        // The original template remains unchanged.
+        const drawingPath = "xl/drawings/drawing1.xml";
+        const drawingFile = zip.file(drawingPath);
+
+        if (drawingFile) {
+            const drawingXml = await drawingFile.async("text");
+            const drawingDoc = parser.parseFromString(
+                drawingXml,
+                "application/xml"
+            );
+
+            const drawingNs =
+                "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing";
+
+            const overlaysToRemove = new Set([
+                "TextBox 2",
+                "TextBox 48",
+                "TextBox 50"
+            ]);
+
+            const shapes = Array.from(
+                drawingDoc.getElementsByTagNameNS(drawingNs, "sp")
+            );
+
+            for (const shape of shapes) {
+                const nameNode = shape.getElementsByTagNameNS(
+                    drawingNs,
+                    "cNvPr"
+                )[0];
+
+                const shapeName = nameNode?.getAttribute("name");
+
+                if (shapeName && overlaysToRemove.has(shapeName)) {
+                    // Remove the entire drawing anchor, not just its shape.
+                    const anchor = shape.parentNode;
+
+                    if (anchor?.parentNode) {
+                        anchor.parentNode.removeChild(anchor);
+                        console.log("Removed empty overlay:", shapeName);
+                    }
+                }
+            }
+
+            
+
+            zip.file(
+                drawingPath,
+                serializer.serializeToString(drawingDoc)
+            );
+        }
+
+
+        // 9. Validate the updated worksheet XML.
+        const updatedXml = serializer.serializeToString(sheetDoc);
+
+        const validationDoc = parser.parseFromString(
+            updatedXml,
+            "application/xml"
+        );
+
+        if (
+            validationDoc.getElementsByTagName("parsererror").length > 0
+        ) {
+            throw new Error(
+                "The updated worksheet failed XML validation."
+            );
+        }
+
+        // 10. Replace only the first worksheet.
+        // Other template files remain in the ZIP archive.
+        zip.file(sheetPath, updatedXml);
+
+        const outputBlob = await zip.generateAsync({
+            type: "blob",
+            mimeType:
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+
+
+        // TEMPORARY DEBUG: verify values in the completed Excel file.
+        const testWb = window.XLSX.read(
+            await outputBlob.arrayBuffer(),
+            { type: "array", cellStyles: true }
+        );
+
+        const testWs = testWb.Sheets[testWb.SheetNames[0]];
+
+        console.log("Generated file — E5:", testWs["E5"]);
+        console.log("Generated file — B6:", testWs["B6"]);
+        console.log("Generated file — B48:", testWs["B48"]);
+        console.log("Generated file — B41:", testWs["B41"]);
+
+
+        // 11. Download the completed copy.
+        const safeName = String(fullName || "Employee")
+            .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+            .trim()
+            .replace(/\s+/g, "_") || "Employee";
+
+        const downloadUrl = URL.createObjectURL(outputBlob);
+        const downloadLink = document.createElement("a");
+
+        downloadLink.href = downloadUrl;
+        downloadLink.download = `CS_Form_6_${safeName}.xlsx`;
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+
+        // Release the temporary download URL.
+        setTimeout(() => {
+            URL.revokeObjectURL(downloadUrl);
+        }, 1000);
+
+    } catch (error) {
+        console.error("Error generating CS Form 6:", error);
+
+        alert(
+            "Unable to generate the leave application form. " +
+            (error.message || "Please check the browser console.")
+        );
+    }
 }
