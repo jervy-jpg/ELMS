@@ -2,11 +2,17 @@
 <html lang="en">
 
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- 2. Load YOUR configuration file -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
+
+    <!-- Libraries required for CS Form No. 6 generation -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
+
+    <!-- Employee dashboard -->
     <script type="module" src="dashboard.js"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ELMS - Dashboard</title>
@@ -131,7 +137,7 @@
                                 <option value="VL-D">Vacation Leave (Filed to DO)</option>
                                 <option value="SL-D">Sick Leave (Filed to DO)</option>
                                 <option value="PL">Paternity Leave</option>
-                                <option value="FL">Mandatory Force Leave</option>
+                                <option value="FL">Mandatory/Forced Leave</option>
                                 <option value="SPL">Special Privilege Leave </option>
                                 <option value="Solo">Solo Parent Leave</option>
                                 <option value="STL">Study Leave</option>
@@ -140,7 +146,7 @@
                                 <option value="SLBW">Special Leave Benefits for Women</option>
                                 <option value="SCL">Special Emergency (Calamity) Leave</option>
                                 <option value="AL">Adoption Leave</option>
-                                 <option value="WL">Wellness Leave</option>
+                                <option value="WL">Wellness Leave</option>
                             </select>
                         </div>
 
@@ -188,6 +194,7 @@
                                     <th>Days</th>
                                     <th>Status</th>
                                     <th>Name</th>
+                                    <th>Action</th>
 
                                 </tr>
                             </thead>

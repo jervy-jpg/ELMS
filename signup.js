@@ -1,19 +1,26 @@
-// signup.js
+
+ // signup.js
 
 // Handle Signup Form
 async function handleSignup(e) {
     e.preventDefault();
 
-    const fullName = document.querySelector('input[placeholder*="full name"], input[type="text"]').value.trim();
-    const email = document.querySelector('input[type="email"]').value.trim();
-    const passwordInputs = document.querySelectorAll('input[type="password"]');
-    const password = passwordInputs[0]?.value;
-    const confirmPassword = passwordInputs[1]?.value;
-    const departmentRaw = document.getElementById("department")?.value;
-    const department = departmentRaw ? departmentRaw.trim() : null;
+    // Read the separate name fields
+    const lastName = document.getElementById("lastname").value.trim();
+    const firstName = document.getElementById("firstname").value.trim();
+    const middleName = document.getElementById("middlename").value.trim();
 
-    if (!email || !password || !confirmPassword) {
-        alert("Please fill in all fields");
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirm_password").value;
+
+    // Format: LAST NAME, FIRST NAME MIDDLE NAME
+    const fullName = middleName
+        ? `${lastName}, ${firstName} ${middleName}`
+        : `${lastName}, ${firstName}`;
+
+    if (!lastName || !firstName || !email || !password || !confirmPassword) {
+        alert("Please fill in all required fields.");
         return;
     }
 
@@ -23,7 +30,7 @@ async function handleSignup(e) {
     }
 
     if (password.length < 6) {
-        alert("Password must be at least 6 characters long");
+        alert("Password must be at least 6 characters long.");
         return;
     }
 
@@ -33,7 +40,10 @@ async function handleSignup(e) {
             password: password,
             options: {
                 data: {
-                    full_name: fullName || null
+                    full_name: fullName,
+                    last_name: lastName,
+                    first_name: firstName,
+                    middle_name: middleName || null
                 }
             }
         });
@@ -41,7 +51,7 @@ async function handleSignup(e) {
         if (error) throw error;
 
         alert("Sign up successful! Please check your email to confirm your account.");
-        window.location.href = "login.html";   // Redirect to login after signup
+        window.location.href = "login.html";
 
     } catch (error) {
         console.error("Signup error:", error);
@@ -50,9 +60,10 @@ async function handleSignup(e) {
 }
 
 // Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('form');
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector("form");
+
     if (form) {
-        form.addEventListener('submit', handleSignup);
+        form.addEventListener("submit", handleSignup);
     }
 });
