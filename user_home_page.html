@@ -56,15 +56,29 @@
 
         <!-- Main Content -->
         <div class="main-content">
+
+
             <header class="top-bar">
                 <h1 id="page-title">Dashboard</h1>
-                <div class="welcome-text">Welcome back, <strong id="welcome-user-name"></strong> 👋</div>
+
+                <div class="welcome-text">
+                    Welcome back,
+                    <strong id="welcome-user-name"></strong> 👋
+                </div>
+
+                <button type="button" id="start-employee-tour" class="tour-help-button"
+                    aria-label="Start the employee dashboard guided tour">
+                    <span aria-hidden="true">❔</span>
+                    <span>Take a Tour</span>
+                </button>
             </header>
+
+
 
             <!-- DASHBOARD SECTION -->
             <div id="dashboard-content" class="content-section active">
                 <div class="dashboard-content">
-                    <h2 class="dashboard-welcome">Good Day,<span id="greeting-name"></span> 👋</h2>
+                    <h2 class="dashboard-welcome">Welcome to Employee Management System,<span id="greeting-name"></span> 👋</h2>
 
                     <div class="stats-container">
                         <div class="stat-card upcoming-card">
@@ -207,8 +221,161 @@
             </div>
         </div>
 
-        <!-- JAVASCRIPT -->
+        <!-- GLOBAL MODAL -->
+        <div id="global-modal" class="modal-overlay hidden">
+            <div id="modal-box" class="modal-box">
+                <h2 id="modal-title">Notification</h2>
+                <p id="modal-message"></p>
+                <div id="modal-actions" class="modal-actions"></div>
+            </div>
+        </div>
 
+    </div>
+
+
+    <!-- EMPLOYEE PROFILE CUSTOMIZATION MODAL -->
+    <div id="profile-editor-modal" class="profile-editor-overlay" hidden>
+        <div class="profile-editor-card" role="dialog" aria-modal="true" aria-labelledby="profile-editor-title">
+
+            <div class="profile-editor-header">
+                <div>
+                    <h2 id="profile-editor-title">Customize Profile</h2>
+                    <p>Make your ELMS profile your own.</p>
+                </div>
+
+                <button type="button" id="close-profile-editor" class="profile-editor-close" aria-label="Close">
+                    &times;
+                </button>
+            </div>
+
+            <div class="profile-editor-body">
+
+                <!-- LIVE PROFILE PREVIEW -->
+                <div class="profile-preview-section">
+                    <div id="profile-preview-frame" class="profile-preview-frame">
+                        <img id="profile-preview-image" src="gojo.jpeg" alt="Profile preview">
+
+                        <div id="profile-initials-preview" class="profile-initials-preview" hidden>
+                            <span id="profile-initials-text">U</span>
+                        </div>
+                    </div>
+
+                    <p id="profile-preview-caption">Profile picture preview</p>
+                </div>
+
+                <!-- CUSTOMIZATION OPTIONS -->
+                <div class="profile-editor-options">
+
+                    <label for="profile-photo-file" class="profile-option-button">
+                        Choose a Photo
+                    </label>
+
+                    <input type="file" id="profile-photo-file" accept="image/jpeg,image/png,image/webp" hidden>
+
+                    <div class="profile-editor-field">
+                        <label for="profile-photo-zoom">Zoom</label>
+                        <input type="range" id="profile-photo-zoom" min="1" max="3" step="0.05" value="1">
+                    </div>
+
+                    <div class="profile-editor-field">
+                        <label for="profile-photo-horizontal">Move Left / Right</label>
+                        <input type="range" id="profile-photo-horizontal" min="0" max="100" value="50">
+                    </div>
+
+                    <div class="profile-editor-field">
+                        <label for="profile-photo-vertical">Move Up / Down</label>
+                        <input type="range" id="profile-photo-vertical" min="0" max="100" value="50">
+                    </div>
+
+                    <div class="profile-editor-divider"></div>
+
+                    <h3>Use Initials Instead</h3>
+                    <p class="profile-editor-help">
+                        Create an avatar using your name.
+                    </p>
+
+                    <div id="profile-avatar-colors" class="profile-avatar-colors">
+                        <button type="button" class="avatar-color-option selected" data-color="#002F6C"
+                            style="--avatar-color:#002F6C" aria-label="Navy blue" aria-pressed="true"></button>
+
+                        <button type="button" class="avatar-color-option" data-color="#15803D"
+                            style="--avatar-color:#15803D" aria-label="Green" aria-pressed="false"></button>
+
+                        <button type="button" class="avatar-color-option" data-color="#7C3AED"
+                            style="--avatar-color:#7C3AED" aria-label="Purple" aria-pressed="false"></button>
+
+                        <button type="button" class="avatar-color-option" data-color="#BE123C"
+                            style="--avatar-color:#BE123C" aria-label="Rose" aria-pressed="false"></button>
+
+                        <button type="button" class="avatar-color-option" data-color="#B45309"
+                            style="--avatar-color:#B45309" aria-label="Amber" aria-pressed="false"></button>
+                    </div>
+
+                    <button type="button" id="use-initials-avatar" class="profile-secondary-button">
+                        Use Initials Avatar
+                    </button>
+
+                    <button type="button" id="restore-default-avatar" class="profile-text-button">
+                        Restore Default Picture
+                    </button>
+
+                </div>
+            </div>
+
+            <div class="profile-editor-footer">
+                <button type="button" id="cancel-profile-editor" class="profile-secondary-button">
+                    Cancel
+                </button>
+
+                <button type="button" id="save-profile-editor" class="profile-save-button">
+                    Save Changes
+                </button>
+            </div>
+
+            <p id="profile-editor-status" class="profile-editor-status" role="status" aria-live="polite"></p>
+        </div>
+    </div>
+    <!-- END EMPLOYEE PROFILE CUSTOMIZATION MODAL -->
+
+    <!-- ELMS EMPLOYEE ONBOARDING TOUR -->
+    <div id="employee-tour-overlay" hidden aria-hidden="true"></div>
+
+    <div id="employee-tour-card" role="dialog" aria-modal="false" aria-labelledby="employee-tour-title"
+        aria-describedby="employee-tour-description" hidden>
+        <span id="employee-tour-step-label" class="tour-step-label">
+            Welcome to ELMS
+        </span>
+
+        <h2 id="employee-tour-title" class="tour-title">
+            Welcome to ELMS!
+        </h2>
+
+        <p id="employee-tour-description" class="tour-description">
+            Take a quick tour to learn how to navigate your employee dashboard.
+        </p>
+
+        <div class="tour-progress-track" role="progressbar" aria-label="Tour progress" aria-valuemin="0"
+            aria-valuemax="100" aria-valuenow="0" id="employee-tour-progress">
+            <div id="employee-tour-progress-fill" class="tour-progress-fill"></div>
+        </div>
+
+        <div class="tour-actions">
+            <button type="button" id="employee-tour-skip" class="tour-button tour-button-skip">
+                Skip Tour
+            </button>
+
+            <div class="tour-button-group">
+                <button type="button" id="employee-tour-back" class="tour-button tour-button-secondary" hidden>
+                    Back
+                </button>
+
+                <button type="button" id="employee-tour-next" class="tour-button tour-button-primary">
+                    Start Tour
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- END ELMS EMPLOYEE ONBOARDING TOUR -->
 
 </body>
 

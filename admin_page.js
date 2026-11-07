@@ -312,10 +312,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
         if (empError) {
-            console.error(empError);
-            alert("Failed to load employees");
+            console.error("Failed to load employees for Excel export:", empError);
+
+            errorModal(
+                "Failed to load employees. Please try again. " +
+                (empError.message || "")
+            );
+
             return;
         }
+
 
         const employeeMap = {};
 
@@ -761,6 +767,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 8. Load Default Page
     showAdminPage('admin-dashboard');
+    initializeAdminTour();
 
 });
 
@@ -787,7 +794,8 @@ function showAdminPage(pageId) {
         'leave-requests': 'Manage Leave Requests',
         'employee-summary': 'Employee Leave Summary',
         'leave-calendar': 'Leave Calendar',
-        'reports': 'Generate Reports'
+        'reports': 'Generate Reports',
+        'employee-management': 'Employee Management'
     };
     document.getElementById('page-title').textContent = titles[pageId];
 
@@ -917,35 +925,42 @@ function getEmployeeStatusBadge(status) {
 
 
 async function updateEmployeeStatus(userId, newStatus) {
+    confirmModal(
+        `Are you sure you want to set this employee as ${newStatus}?`,
+        async () => {
+            try {
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        employee_status: newStatus
+                    })
+                    .eq('id', userId);
 
-    if (!confirm(`Are you sure you want to set this employee as ${newStatus}?`)) {
-        return;
-    }
+                if (error) {
+                    console.error("Error updating employee status:", error);
 
-    const { error } = await supabaseClient
-        .from('profiles')
-        .update({
-            employee_status: newStatus
-        })
-        .eq('id', userId);
+                    errorModal(
+                        `Failed to update employee status: ${error.message}`
+                    );
+                    return;
+                }
 
-    if (error) {
-        showModal({
-            title: "Error",
-            message: error.message,
-            buttons: [{ text: "Close" }]
-        });
-        return;
-    }
+                successModal(
+                    "Employee status updated successfully."
+                );
 
-    showModal({
-        title: "Success",
-        message: "Employee status updated successfully.",
-        buttons: [{ text: "OK" }]
-    });
+                const row = document.getElementById(`emp-${userId}`);
+                if (row) row.remove();
 
-    const row = document.getElementById(`emp-${userId}`);
-    if (row) row.remove();
+            } catch (error) {
+                console.error("Unexpected employee status update error:", error);
+
+                errorModal(
+                    "An unexpected error occurred while updating employee status."
+                );
+            }
+        }
+    );
 }
 
 async function setEmployeeInactive(id) {
@@ -1885,100 +1900,282 @@ async function loadReportData() {
 
 // --- EXPORT FUNCTIONS ---
 
-
 async function exportAsPDF() {
-    if (!reportData || reportData.length === 0) return alert('No data to export!');
+    if (!reportData || reportData.length === 0) {
+        alertModal("No data to export!", "No Data");
+        return;
+    }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
 
-    const monthText = document.getElementById('report-month-text').textContent;
-    const yearText = document.getElementById('report-year-text').textContent;
+        const monthText = document.getElementById('report-month-text').textContent;
+        const yearText = document.getElementById('report-year-text').textContent;
 
-    // Header
-    doc.setFontSize(16);
-    doc.text('LEAVE MANAGEMENT REPORT', 105, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`For the Month of ${monthText} ${yearText}`, 105, 30, { align: 'center' });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
 
-    // Table headers
-    let yPos = 45;
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text('Employee Name', 15, yPos);
-    doc.text('Leave Dates', 60, yPos);
-    doc.text('Type', 120, yPos);
-    doc.text('Days', 150, yPos);
-    doc.setDrawColor(200);
-    doc.line(15, yPos + 3, 175, yPos + 3);
-    yPos += 10;
+        const leftMargin = 15;
+        const rightMargin = 15;
+        const contentWidth = pageWidth - leftMargin - rightMargin;
 
-    // Table rows
-    doc.setTextColor(0);
-    reportData.forEach(row => {
-        if (yPos > 270) {
+        const columns = {
+            employee: { x: 15, width: 42 },
+            dates: { x: 60, width: 47 },
+            type: { x: 112, width: 42 },
+            days: { x: 170, width: 25 }
+        };
+
+        const bottomMargin = 20;
+        let yPos = 45;
+
+        // Draw report title and month
+        function drawReportHeader() {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.setTextColor(0, 47, 108);
+
+            doc.text(
+                'LEAVE MANAGEMENT REPORT',
+                pageWidth / 2,
+                20,
+                { align: 'center' }
+            );
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+
+            doc.text(
+                `For the Month of ${monthText} ${yearText}`,
+                pageWidth / 2,
+                30,
+                { align: 'center' }
+            );
+        }
+
+        // Draw table column headers
+        function drawTableHeaders() {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(80);
+
+            doc.text('Employee Name', columns.employee.x, yPos);
+            doc.text('Leave Dates', columns.dates.x, yPos);
+            doc.text('Leave Type', columns.type.x, yPos);
+            doc.text('Days', columns.days.x, yPos, { align: 'center' });
+
+            doc.setDrawColor(190);
+            doc.line(
+                leftMargin,
+                yPos + 3,
+                pageWidth - rightMargin,
+                yPos + 3
+            );
+
+            yPos += 9;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(0);
+        }
+
+        // Initial page header and table headers
+        drawReportHeader();
+        drawTableHeaders();
+
+        let exportedRows = 0;
+
+        // Draw leave records
+        reportData.forEach(row => {
+            const reportRange = getReportDateRange(
+                row.start_date,
+                row.end_date,
+                document.getElementById('report-year').value,
+                document.getElementById('report-month').value
+            );
+
+            // Skip records outside the selected month
+            if (!reportRange) return;
+
+            const employeeName = doc.splitTextToSize(
+                String(row.profiles?.full_name || 'Unknown'),
+                columns.employee.width
+            );
+
+            const leaveDates = doc.splitTextToSize(
+                `${reportRange.start} to ${reportRange.end}`,
+                columns.dates.width
+            );
+
+            const leaveType = doc.splitTextToSize(
+                String(row.leave_type || 'N/A'),
+                columns.type.width
+            );
+
+            const days = String(reportRange.days);
+
+            // Determine the height needed for this row
+            const maxLines = Math.max(
+                employeeName.length,
+                leaveDates.length,
+                leaveType.length,
+                1
+            );
+
+            const lineHeight = 5;
+            const rowHeight = maxLines * lineHeight + 4;
+
+            // Start a new page when the row won't fit
+            if (yPos + rowHeight > pageHeight - bottomMargin) {
+                doc.addPage();
+                yPos = 20;
+
+                drawTableHeaders();
+            }
+
+            // Draw each cell at its own fixed column position
+            doc.text(employeeName, columns.employee.x, yPos);
+            doc.text(leaveDates, columns.dates.x, yPos);
+            doc.text(leaveType, columns.type.x, yPos);
+
+            // Vertically center the day count within the row
+            const daysY = yPos + ((maxLines - 1) * lineHeight) / 2;
+
+            doc.text(
+                days,
+                columns.days.x,
+                daysY,
+                { align: 'center' }
+            );
+
+            // Separator below the row
+            doc.setDrawColor(225);
+            doc.line(
+                leftMargin,
+                yPos + rowHeight - 2,
+                pageWidth - rightMargin,
+                yPos + rowHeight - 2
+            );
+
+            yPos += rowHeight;
+            exportedRows++;
+        });
+
+        // Summary section
+        const summaryHeight = 34;
+
+        if (yPos + summaryHeight > pageHeight - bottomMargin) {
             doc.addPage();
             yPos = 20;
         }
-        const reportRange = getReportDateRange(
-            row.start_date,
-            row.end_date,
-            document.getElementById('report-month').value,
-            document.getElementById('report-year').value
-        );
 
-        if (!reportRange) return;
+        yPos += 5;
 
-        doc.text(
-            `${row.profiles?.full_name || 'Unknown'}`,
-            15,
+        doc.setDrawColor(180);
+        doc.line(
+            leftMargin,
+            yPos,
+            pageWidth - rightMargin,
             yPos
         );
 
+        yPos += 9;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(0, 47, 108);
+
+        doc.text('REPORT SUMMARY', leftMargin, yPos);
+
+        yPos += 8;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+
         doc.text(
-            `${reportRange.start} → ${reportRange.end}`,
-            60,
+            `Total Employees on Leave: ${document.getElementById('report-total-employees').textContent}`,
+            leftMargin,
             yPos
         );
 
-        doc.text(
-            `${row.leave_type}`,
-            120,
-            yPos,
-            { align: 'center' }
-        );
+        yPos += 7;
 
         doc.text(
-            `${reportRange.days}`,
-            150,
-            yPos,
-            { align: 'center' }
+            `Total Approved Leaves: ${document.getElementById('report-total-leaves').textContent}`,
+            leftMargin,
+            yPos
         );
-    });
 
-    // Summary
-    yPos += 5;
-    doc.setDrawColor(200);
-    doc.line(15, yPos, 175, yPos);
-    yPos += 8;
-    doc.setFontSize(11);
-    doc.text(`Total Employees on Leave: ${document.getElementById('report-total-employees').textContent}`, 15, yPos);
-    yPos += 8;
-    doc.text(`Total Approved Leaves: ${document.getElementById('report-total-leaves').textContent}`, 15, yPos);
-    yPos += 8;
-    doc.text(`Total Leave Days Combined: ${document.getElementById('report-total-days').textContent}`, 15, yPos);
+        yPos += 7;
 
-    // Save file
-    doc.save(`Leave_Report_${monthText}_${yearText}.pdf`);
-}
+        doc.text(
+            `Total Leave Days Combined: ${document.getElementById('report-total-days').textContent}`,
+            leftMargin,
+            yPos
+        );
 
-// log out button //
-async function handleLogout() {
-    if (confirm("Are you sure you want to log out?")) {
-        await supabaseClient.auth.signOut();
-        window.location.href = 'login.html';
+        // Warn if no rows matched the selected month
+        if (exportedRows === 0) {
+            console.warn(
+                'The PDF was generated, but no leave records matched the selected month.'
+            );
+        }
+
+        // Save the PDF
+        doc.save(`Leave_Report_${monthText}_${yearText}.pdf`);
+
+    } catch (error) {
+        console.error('PDF export failed:', error);
+
+        errorModal(
+            'Unable to generate the PDF report. Please try again.'
+        );
     }
 }
+
+
+// log out button //
+
+function handleLogout() {
+    confirmModal(
+        "Are you sure you want to log out?",
+        async () => {
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+
+                if (error) {
+                    console.error("Logout failed:", error);
+
+                    // Allow the confirmation modal to finish closing
+                    // before displaying the error modal.
+                    window.setTimeout(() => {
+                        errorModal(
+                            "Unable to log out. Please try again. " +
+                            error.message
+                        );
+                    }, 170);
+
+                    return;
+                }
+
+                window.location.href = "login.html";
+
+            } catch (error) {
+                console.error("Unexpected logout error:", error);
+
+                window.setTimeout(() => {
+                    errorModal(
+                        "An unexpected error occurred while logging out."
+                    );
+                }, 170);
+            }
+        }
+    );
+}
+
 
 
 function applyFilters() {
@@ -2031,10 +2228,17 @@ function showModal({ title, message, buttons = [] }) {
         button.textContent = btn.text;
         button.className = btn.className || "";
 
+
         button.onclick = () => {
-            if (btn.onClick) btn.onClick();
             hideModal();
+
+            if (btn.onClick) {
+                setTimeout(() => {
+                    btn.onClick();
+                }, 170);
+            }
         };
+
 
         modalActions.appendChild(button);
     });
@@ -2659,12 +2863,323 @@ async function generateCSForm6(requestId) {
             URL.revokeObjectURL(downloadUrl);
         }, 1000);
 
+
     } catch (error) {
         console.error("Error generating CS Form 6:", error);
 
-        alert(
+        errorModal(
             "Unable to generate the leave application form. " +
             (error.message || "Please check the browser console.")
         );
+    }
+
+}
+
+
+
+/* =========================================================
+   ADMIN GUIDED TOUR
+   Independent of existing ELMS leave-management functions
+========================================================= */
+
+const adminTourSteps = [
+    {
+        page: 'admin-dashboard',
+        target: '#page-title',
+        title: 'Welcome to the Admin Dashboard',
+        description:
+            'This guided tour introduces the main tools you can use to manage employee leave requests and records.'
+    },
+    {
+        page: 'admin-dashboard',
+        target: '#admin-total-requests',
+        title: 'Dashboard Overview',
+        description:
+            'Review the leave-request statistics here. Use the dashboard to get a quick overview of requests and their current statuses.'
+    },
+    {
+        page: 'leave-requests',
+        target: '#search-leave-employee',
+        title: 'Manage Leave Requests',
+        description:
+            'Find employee requests and review their details. Use the available filters to narrow down the records before taking action.'
+    },
+    {
+        page: 'employee-summary',
+        target: '#search-summary-employee',
+        title: 'Employee Leave Summary',
+        description:
+            'Search employee records and review leave summaries. Use the available month and year filters when needed.'
+    },
+    {
+        page: 'leave-calendar',
+        target: '#calendar-grid',
+        title: 'Leave Calendar',
+        description:
+            'View scheduled employee leaves on the calendar. Use the previous and next month controls to navigate between months.'
+    },
+    {
+        page: 'reports',
+        target: '#generate-report',
+        title: 'Reports and Exports',
+        description:
+            'Select the reporting period and generate a report. Use the available export options to download supported report formats.'
+    },
+    {
+        page: 'employee-management',
+        target: '#employee-search',
+        title: 'Employee Management',
+        description:
+            'Find employee accounts and access the available employee-management actions. Always verify an employee record before making changes.'
+    }
+];
+
+let adminTourIndex = 0;
+let adminTourActive = false;
+let adminTourPositionHandler = null;
+
+const ADMIN_TOUR_STORAGE_KEY = 'elms_admin_tour_completed_v1';
+
+function initializeAdminTour() {
+    const startButton = document.getElementById('start-admin-tour');
+    const nextButton = document.getElementById('admin-tour-next');
+    const backButton = document.getElementById('admin-tour-back');
+    const skipButton = document.getElementById('admin-tour-skip');
+    const overlay = document.getElementById('admin-tour-overlay');
+    const card = document.getElementById('admin-tour-card');
+
+    // Do not initialize if the tour HTML is incomplete.
+    if (!startButton || !nextButton || !backButton ||
+        !skipButton || !overlay || !card) {
+        console.warn('Admin tour elements were not found. Check the tour HTML.');
+        return;
+    }
+
+    startButton.addEventListener('click', () => {
+        startAdminTour(0);
+    });
+
+    nextButton.addEventListener('click', () => {
+        if (!adminTourActive) return;
+
+        if (adminTourIndex >= adminTourSteps.length - 1) {
+            finishAdminTour();
+        } else {
+            showAdminTourStep(adminTourIndex + 1);
+        }
+    });
+
+    backButton.addEventListener('click', () => {
+        if (adminTourActive && adminTourIndex > 0) {
+            showAdminTourStep(adminTourIndex - 1);
+        }
+    });
+
+    skipButton.addEventListener('click', finishAdminTour);
+
+    document.addEventListener('keydown', event => {
+        if (adminTourActive && event.key === 'Escape') {
+            finishAdminTour();
+        }
+    });
+
+    // Automatically introduce the tour on the first visit.
+    let tourCompleted = false;
+
+    try {
+        tourCompleted =
+            localStorage.getItem(ADMIN_TOUR_STORAGE_KEY) === 'true';
+    } catch (error) {
+        console.warn('Unable to read admin tour preference:', error);
+    }
+
+    if (!tourCompleted) {
+        startAdminTour(0);
+    }
+}
+
+function startAdminTour(index = 0) {
+    const overlay = document.getElementById('admin-tour-overlay');
+    const card = document.getElementById('admin-tour-card');
+
+    if (!overlay || !card) return;
+
+    adminTourActive = true;
+    adminTourIndex = index;
+
+    overlay.hidden = false;
+    card.hidden = false;
+
+    showAdminTourStep(adminTourIndex);
+}
+
+function showAdminTourStep(index) {
+    const overlay = document.getElementById('admin-tour-overlay');
+    const card = document.getElementById('admin-tour-card');
+
+    if (!overlay || !card) return;
+
+    adminTourIndex = Math.max(
+        0,
+        Math.min(index, adminTourSteps.length - 1)
+    );
+
+    const step = adminTourSteps[adminTourIndex];
+
+    // Remove the previous highlight before changing pages.
+    document.querySelectorAll('.admin-tour-highlight')
+        .forEach(element => {
+            element.classList.remove('admin-tour-highlight');
+        });
+
+    // Navigate using the existing ELMS page-navigation function.
+    if (typeof showAdminPage === 'function') {
+        showAdminPage(step.page);
+    }
+
+    const target = document.querySelector(step.target);
+
+    document.getElementById('admin-tour-step-label').textContent =
+        `STEP ${adminTourIndex + 1} OF ${adminTourSteps.length}`;
+
+    document.getElementById('admin-tour-title').textContent =
+        step.title;
+
+    document.getElementById('admin-tour-description').textContent =
+        step.description;
+
+    const progress = document.getElementById('admin-tour-progress-fill');
+    if (progress) {
+        progress.style.width =
+            `${((adminTourIndex + 1) / adminTourSteps.length) * 100}%`;
+    }
+
+    const backButton = document.getElementById('admin-tour-back');
+    const nextButton = document.getElementById('admin-tour-next');
+
+    backButton.hidden = adminTourIndex === 0;
+    nextButton.textContent =
+        adminTourIndex === adminTourSteps.length - 1
+            ? 'Finish Tour'
+            : 'Next';
+
+    if (!target) {
+        console.warn('Admin tour target not found:', step.target);
+        positionAdminTourCard();
+        return;
+    }
+
+    // Let the page navigation and layout update before positioning.
+    requestAnimationFrame(() => {
+        if (!adminTourActive) return;
+
+        target.classList.add('admin-tour-highlight');
+
+        target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'nearest'
+        });
+
+        // Reposition after scrolling has started.
+        setTimeout(() => {
+            if (adminTourActive) positionAdminTourCard();
+        }, 250);
+    });
+
+    if (adminTourPositionHandler) {
+        window.removeEventListener('resize', adminTourPositionHandler);
+        window.removeEventListener('scroll', adminTourPositionHandler, true);
+    }
+
+    adminTourPositionHandler = () => {
+        if (adminTourActive) positionAdminTourCard();
+    };
+
+    window.addEventListener('resize', adminTourPositionHandler);
+    window.addEventListener('scroll', adminTourPositionHandler, true);
+}
+
+function positionAdminTourCard() {
+    const card = document.getElementById('admin-tour-card');
+
+    if (!card || card.hidden) return;
+
+    const step = adminTourSteps[adminTourIndex];
+    const target = step ? document.querySelector(step.target) : null;
+
+    const margin = 14;
+    const gap = 16;
+
+    // Default to a safe centered position if the target is missing.
+    let left = Math.max(
+        margin,
+        (window.innerWidth - card.offsetWidth) / 2
+    );
+
+    let top = Math.max(
+        margin,
+        (window.innerHeight - card.offsetHeight) / 2
+    );
+
+    if (target) {
+        const rect = target.getBoundingClientRect();
+
+        left = rect.left + rect.width / 2 - card.offsetWidth / 2;
+        left = Math.max(
+            margin,
+            Math.min(left, window.innerWidth - card.offsetWidth - margin)
+        );
+
+        // Prefer below the target; use above if there is insufficient room.
+        if (
+            rect.bottom + gap + card.offsetHeight <=
+            window.innerHeight - margin
+        ) {
+            top = rect.bottom + gap;
+        } else if (rect.top - gap - card.offsetHeight >= margin) {
+            top = rect.top - gap - card.offsetHeight;
+        }
+    }
+
+    top = Math.max(
+        margin,
+        Math.min(top, window.innerHeight - card.offsetHeight - margin)
+    );
+
+    card.style.position = 'fixed';
+    card.style.left = `${left}px`;
+    card.style.top = `${top}px`;
+}
+
+function finishAdminTour() {
+    const overlay = document.getElementById('admin-tour-overlay');
+    const card = document.getElementById('admin-tour-card');
+
+    adminTourActive = false;
+
+    document.querySelectorAll('.admin-tour-highlight')
+        .forEach(element => {
+            element.classList.remove('admin-tour-highlight');
+        });
+
+    if (overlay) overlay.hidden = true;
+
+    if (card) {
+        card.hidden = true;
+        card.style.left = '';
+        card.style.top = '';
+    }
+
+    if (adminTourPositionHandler) {
+        window.removeEventListener('resize', adminTourPositionHandler);
+        window.removeEventListener('scroll', adminTourPositionHandler, true);
+        adminTourPositionHandler = null;
+    }
+
+    try {
+        localStorage.setItem(ADMIN_TOUR_STORAGE_KEY, 'true');
+    } catch (error) {
+        console.warn('Unable to save admin tour preference:', error);
     }
 }
