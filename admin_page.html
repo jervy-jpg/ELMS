@@ -35,11 +35,27 @@
     <aside id="admin-sidebar" class="w-64 bg-gray-800 text-white flex flex-col">
 
         <div class="p-4 border-b border-gray-700">
-            <h2 class="text-xl font-bold">Admin Panel</h2>
+            <!-- ELMS Branding -->
+            <div class="flex items-center gap-3">
+                <div class="elms-logo-frame">
+                    <img src="logo2.png" alt="ELMS Logo" class="elms-sidebar-logo">
+                </div>
 
-            <p id="admin-name-sidebar" class="text-sm text-gray-300 mt-1">Admin User</p>
+                <div class="min-w-0">
+                    <h2 class="text-xl font-bold leading-tight">
+                        Admin Panel
+                    </h2>
+                    <p class="text-xs text-gray-300 mt-1 tracking-wide">
+                        LEAVE MANAGEMENT SYSTEM
+                    </p>
+                </div>
+            </div>
 
+            <p id="admin-name-sidebar" class="text-sm text-gray-300 mt-3">
+                Admin User
+            </p>
         </div>
+
 
         <div id="notif-panel" class="hidden absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg p-2 z-50">
             <div class="text-sm font-bold p-2 border-b">Notifications</div>
@@ -85,8 +101,22 @@
             <h1 id="page-title" class="text-lg md:text-xl font-semibold text-gray-800 min-w-0">
                 Admin Dashboard
             </h1>
-        </header>
 
+            <div class="ml-auto flex items-center gap-3 shrink-0">
+                <button id="start-admin-tour" type="button"
+                    class="inline-flex items-center gap-2 px-3 py-2 border border-blue-900 rounded-lg text-blue-900 text-sm font-semibold hover:bg-blue-900 hover:text-white transition"
+                    aria-label="Start the admin guided tour">
+                    <i class="fa fa-question-circle" aria-hidden="true"></i>
+                    <span>Take a Tour</span>
+                </button>
+
+                <div id="school-brand" class="font-bold text-gray-800" aria-label="Felix Amante Senior High School">
+                    FASHS
+                </div>
+
+
+            </div>
+        </header>
 
         <div class="p-6">
 
@@ -393,7 +423,7 @@
         </div>
     </main>
     <!-- Global Modal -->
-    <<div id="global-modal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center">
+    <div id="global-modal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center">
 
         <div id="modal-box" class="bg-white w-full max-w-md mx-4 rounded-xl shadow-2xl p-6
                 transform transition-all duration-200 scale-95 opacity-0">
@@ -405,9 +435,50 @@
             <div id="modal-actions" class="flex justify-end gap-3"></div>
 
         </div>
+    </div>
+
+    <!-- ADMIN GUIDED TOUR -->
+    <div id="admin-tour-overlay" hidden></div>
+
+    <div id="admin-tour-card" hidden role="dialog" aria-modal="true" aria-labelledby="admin-tour-title"
+        aria-describedby="admin-tour-description">
+
+        <div class="admin-tour-step-label" id="admin-tour-step-label">
+            ADMIN GUIDE
         </div>
 
-        <script src="admin_page.js"></script>
+        <h2 class="admin-tour-title" id="admin-tour-title">
+            Welcome to the Admin Dashboard
+        </h2>
+
+        <p class="admin-tour-description" id="admin-tour-description">
+            This guided tour will help you understand the main features
+            of the Employee Leave Management System.
+        </p>
+
+        <div class="admin-tour-progress-track">
+            <div id="admin-tour-progress-fill" class="admin-tour-progress-fill"></div>
+        </div>
+
+        <div class="admin-tour-actions">
+            <button type="button" id="admin-tour-skip" class="admin-tour-button admin-tour-button-skip">
+                Skip Tour
+            </button>
+
+            <div class="admin-tour-button-group">
+                <button type="button" id="admin-tour-back" class="admin-tour-button admin-tour-button-secondary" hidden>
+                    Back
+                </button>
+
+                <button type="button" id="admin-tour-next" class="admin-tour-button admin-tour-button-primary">
+                    Start Tour
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- END ADMIN GUIDED TOUR -->
+
+    <script src="admin_page.js"></script>
 
 
 </body>

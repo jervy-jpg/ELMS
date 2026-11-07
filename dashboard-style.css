@@ -468,23 +468,6 @@ html, body {
     margin-top: 0;
 }
 
-#global-modal {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.5);
-    z-index: 9999;
-}
-
-#modal-box {
-    background: white;
-    width: 100%;
-    max-width: 400px;
-    border-radius: 12px;
-    padding: 20px;
-}
 
 
 /* ========================================
@@ -706,5 +689,716 @@ body {
 
     .history-preview {
         padding: 12px 8px;
+    }
+}
+
+
+/* ===== GLOBAL CUSTOM MODAL ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.55);
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+#global-modal.hidden {
+    display: none !important;
+}
+
+.modal-box {
+    width: 100%;
+    max-width: 420px;
+    padding: 28px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+    opacity: 1;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.modal-box h2 {
+    margin: 0 0 12px;
+    color: #172B4D;
+    font-size: 1.25rem;
+}
+
+.modal-box p {
+    margin: 0 0 24px;
+    color: #475569;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.modal-actions button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #e2e8f0;
+    color: #172B4D;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.modal-actions button:hover {
+    filter: brightness(0.96);
+}
+
+.modal-actions button.primary {
+    background: #172B4D;
+    color: #ffffff;
+}
+
+.modal-actions button.danger {
+    background: #dc2626;
+    color: #ffffff;
+}
+
+
+/* ===== ELMS DYNAMIC MODAL COLORS ===== */
+
+.modal-box {
+    border: 1px solid #E1E8F0;
+    border-top: 5px solid #002F6C;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 27, 64, 0.18);
+}
+
+.modal-box.modal-info {
+    border-top-color: #002F6C;
+}
+
+.modal-box.modal-confirm {
+    border-top-color: #002F6C;
+}
+
+.modal-box.modal-success {
+    border-top-color: #16A34A;
+}
+
+.modal-box.modal-error {
+    border-top-color: #DC2626;
+}
+
+.modal-box.modal-warning {
+    border-top-color: #D97706;
+}
+
+#modal-title {
+    color: #002F6C;
+    font-weight: 700;
+}
+
+.modal-box.modal-success #modal-title {
+    color: #15803D;
+}
+
+.modal-box.modal-error #modal-title {
+    color: #B91C1C;
+}
+
+.modal-box.modal-warning #modal-title {
+    color: #B45309;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.modal-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.modal-btn.modal-primary {
+    background: #002F6C;
+    color: #FFFFFF;
+}
+
+.modal-btn.modal-primary:hover {
+    background: #001B40;
+}
+
+.modal-btn.modal-cancel {
+    background: #E5E7EB;
+    color: #374151;
+}
+
+.modal-btn.modal-cancel:hover {
+    background: #D1D5DB;
+}
+
+.modal-box.modal-success .modal-btn.modal-primary {
+    background: #16A34A;
+}
+
+.modal-box.modal-success .modal-btn.modal-primary:hover {
+    background: #15803D;
+}
+
+.modal-box.modal-error .modal-btn.modal-primary {
+    background: #DC2626;
+}
+
+.modal-box.modal-error .modal-btn.modal-primary:hover {
+    background: #B91C1C;
+}
+
+.modal-box.modal-warning .modal-btn.modal-primary {
+    background: #D97706;
+}
+
+.modal-box.modal-warning .modal-btn.modal-primary:hover {
+    background: #B45309;
+}
+
+
+
+/* ===== EMPLOYEE PROFILE EDITOR ===== */
+
+.profile-editor-overlay[hidden] {
+    display: none !important;
+}
+
+.profile-editor-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+    background: rgba(0, 27, 64, 0.65);
+    backdrop-filter: blur(4px);
+}
+
+.profile-editor-card {
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #FFFFFF;
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    color: #1F2937;
+}
+
+.profile-editor-header,
+.profile-editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 24px;
+}
+
+.profile-editor-header {
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.profile-editor-header h2 {
+    margin: 0;
+    color: #002F6C;
+    font-size: 1.35rem;
+}
+
+.profile-editor-header p,
+.profile-editor-help {
+    margin: 6px 0 0;
+    color: #64748B;
+    font-size: 0.9rem;
+}
+
+.profile-editor-close {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: #F1F5F9;
+    color: #002F6C;
+    font-size: 1.7rem;
+    cursor: pointer;
+}
+
+.profile-editor-body {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 28px;
+    padding: 24px;
+}
+
+.profile-preview-section {
+    text-align: center;
+}
+
+.profile-preview-frame {
+    width: 180px;
+    height: 180px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 4px solid #E5E7EB;
+    border-radius: 50%;
+    background: #F1F5F9;
+}
+
+.profile-preview-frame img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+}
+
+.profile-initials-preview {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    background: #002F6C;
+    color: #FFFFFF;
+    font-size: 3.5rem;
+    font-weight: 700;
+}
+
+.profile-initials-preview:not([hidden]) {
+    display: flex;
+}
+
+#profile-preview-caption {
+    color: #64748B;
+    font-size: 0.85rem;
+}
+
+.profile-editor-options {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.profile-editor-options h3 {
+    margin: 0;
+    color: #002F6C;
+    font-size: 1rem;
+}
+
+.profile-option-button,
+.profile-secondary-button,
+.profile-save-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+}
+
+.profile-option-button,
+.profile-save-button {
+    background: #002F6C;
+    color: #FFFFFF;
+}
+
+.profile-option-button:hover,
+.profile-save-button:hover {
+    background: #001B40;
+}
+
+.profile-secondary-button {
+    background: #E8EEF8;
+    color: #002F6C;
+}
+
+.profile-secondary-button:hover {
+    background: #D7E2F2;
+}
+
+.profile-text-button {
+    align-self: flex-start;
+    padding: 4px 0;
+    border: none;
+    background: transparent;
+    color: #B91C1C;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.profile-editor-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.profile-editor-field label {
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.profile-editor-field input[type="range"] {
+    width: 100%;
+    accent-color: #002F6C;
+}
+
+.profile-editor-divider {
+    height: 1px;
+    background: #E5E7EB;
+    margin: 4px 0;
+}
+
+.profile-avatar-colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.avatar-color-option {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #FFFFFF;
+    border-radius: 50%;
+    background: var(--avatar-color);
+    box-shadow: 0 0 0 1px #CBD5E1;
+    cursor: pointer;
+}
+
+.avatar-color-option.selected {
+    box-shadow: 0 0 0 3px #C7E83E;
+}
+
+.profile-editor-footer {
+    justify-content: flex-end;
+    border-top: 1px solid #E5E7EB;
+}
+
+.profile-editor-status {
+    padding: 0 24px 16px;
+    margin: 0;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 560px) {
+    .profile-editor-overlay {
+        padding: 10px;
+    }
+
+    .profile-editor-card {
+        max-height: 95vh;
+    }
+
+    .profile-editor-body {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 18px;
+    }
+
+    .profile-preview-frame {
+        width: 140px;
+        height: 140px;
+    }
+
+    .profile-editor-header,
+    .profile-editor-footer {
+        padding: 16px 18px;
+    }
+}
+
+#profile-preview-image[hidden] {
+    display: none !important;
+}
+
+/* ========================================
+   ELMS EMPLOYEE ONBOARDING TOUR
+   Compact Professional Design
+   ======================================== */
+
+#employee-tour-overlay[hidden],
+#employee-tour-card[hidden] {
+    display: none !important;
+}
+
+#employee-tour-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    background: rgba(15, 23, 42, 0.62);
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+/* Highlight the current tour target */
+.elms-tour-highlight {
+    position: relative !important;
+    z-index: 11001 !important;
+    outline: 2px solid #4CAF50 !important;
+    outline-offset: 4px;
+    border-radius: 8px;
+    box-shadow:
+        0 0 0 5px rgba(76, 175, 80, 0.15),
+        0 8px 24px rgba(0, 0, 0, 0.16) !important;
+    scroll-margin: 80px;
+}
+
+/* Compact floating tour instructions */
+#employee-tour-card {
+    position: fixed;
+    z-index: 11002;
+    width: min(350px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 20px;
+    background: #FFFFFF;
+    border: 1px solid #E1E8F0;
+    border-top: 4px solid #4CAF50;
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+    color: #1F2937;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+/* Step indicator */
+#employee-tour-card .tour-step-label {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: #2E7D32;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+/* Tour heading */
+#employee-tour-card .tour-title {
+    margin: 0 0 8px;
+    color: #002F6C;
+    font-size: 1.15rem;
+    line-height: 1.35;
+}
+
+/* Tour description */
+#employee-tour-card .tour-description {
+    margin: 0 0 16px;
+    color: #475569;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+/* Progress indicator */
+#employee-tour-card .tour-progress-track {
+    height: 4px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    background: #E5E7EB;
+    border-radius: 10px;
+}
+
+#employee-tour-card .tour-progress-fill {
+    height: 100%;
+    width: 0;
+    background: #4CAF50;
+    border-radius: inherit;
+    transition: width 0.25s ease;
+}
+
+/* Navigation layout */
+#employee-tour-card .tour-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+#employee-tour-card .tour-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* Compact buttons */
+#employee-tour-card .tour-button {
+    min-height: 35px;
+    padding: 8px 11px;
+    border: none;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+#employee-tour-card .tour-button:hover {
+    transform: translateY(-1px);
+}
+
+#employee-tour-card .tour-button:focus-visible,
+#start-employee-tour:focus-visible {
+    outline: 3px solid #86EFAC;
+    outline-offset: 3px;
+}
+
+/* Primary button */
+#employee-tour-card .tour-button-primary {
+    background: #002F6C;
+    color: #FFFFFF;
+}
+
+#employee-tour-card .tour-button-primary:hover {
+    background: #001B40;
+}
+
+/* Secondary button */
+#employee-tour-card .tour-button-secondary {
+    background: #E8EEF8;
+    color: #002F6C;
+}
+
+#employee-tour-card .tour-button-secondary:hover {
+    background: #D7E2F2;
+}
+
+/* Skip button */
+#employee-tour-card .tour-button-skip {
+    padding-left: 0;
+    padding-right: 0;
+    background: transparent;
+    color: #64748B;
+}
+
+#employee-tour-card .tour-button-skip:hover {
+    color: #B91C1C;
+}
+
+/* Dashboard Take a Tour button */
+#start-employee-tour {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 1px solid #002F6C;
+    border-radius: 7px;
+    background: #FFFFFF;
+    color: #002F6C;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#start-employee-tour:hover {
+    background: #002F6C;
+    color: #FFFFFF;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+    #employee-tour-card {
+        width: calc(100vw - 28px);
+        max-height: calc(100dvh - 28px);
+        padding: 16px;
+        border-radius: 11px;
+    }
+
+    #employee-tour-card .tour-step-label {
+        margin-bottom: 7px;
+        font-size: 10px;
+    }
+
+    #employee-tour-card .tour-title {
+        font-size: 1.05rem;
+        line-height: 1.35;
+    }
+
+    #employee-tour-card .tour-description {
+        margin-bottom: 13px;
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
+    #employee-tour-card .tour-progress-track {
+        margin-bottom: 13px;
+    }
+
+    #employee-tour-card .tour-actions {
+        align-items: center;
+        gap: 8px;
+    }
+
+    #employee-tour-card .tour-button-group {
+        justify-content: flex-end;
+        gap: 5px;
+    }
+
+    #employee-tour-card .tour-button {
+        min-height: 34px;
+        padding: 7px 9px;
+        font-size: 11px;
+    }
+
+    #start-employee-tour {
+        min-height: 38px;
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+    #employee-tour-card {
+        padding: 13px;
+    }
+
+    #employee-tour-card .tour-actions {
+        align-items: flex-start;
+    }
+
+    #employee-tour-card .tour-button-group {
+        max-width: 100%;
+    }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    #employee-tour-overlay,
+    #employee-tour-card,
+    #employee-tour-card .tour-progress-fill,
+    #employee-tour-card .tour-button {
+        transition: none !important;
     }
 }
